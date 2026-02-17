@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spindle Enhancer Energy Analysis — Haas VF-4/5/6</title>
+<meta name="description" content="Battery-powered spindle enhancer energy analysis for slotting 6061-T6 with 1.0-2.5mm micro endmills on Haas VF-4, VF-5, VF-6. Load-to-kJ calculator and #1098 macro logger.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f5f7;
+  --bg-card: #ffffff;
+  --bg-card-alt: #f0f1f4;
+  --bg-th: #e4e6ec;
+  --bg-tr: #fafbfc;
+  --bg-tr-alt: #f2f3f6;
+  --bdr: #d0d3dc;
+  --bdr-hi: #b5b9c6;
+  --c1: #1a1d26;
+  --c2: #4b5068;
+  --c3: #6e7389;
+  --amber: #a07608;
+  --amber-d: #8a6507;
+  --amber-g: rgba(160,118,8,0.07);
+  --blue: #2563eb;
+  --blue-g: rgba(37,99,235,0.05);
+  --green: #15803d;
+  --green-d: #166534;
+  --red: #dc2626;
+  --red-d: #b91c1c;
+  --cyan: #0e7490;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:#b5b9c6 #f4f5f7}
+body{background:var(--bg);color:var(--c1);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.015'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#b5b9c6;border-radius:3px}
+.ctr{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* HEADER */
+header{padding:80px 0 60px;border-bottom:1px solid var(--bdr);position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,var(--amber-g) 0%,transparent 70%);pointer-events:none}
+.tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);background:var(--amber-g);border:1px solid rgba(160,118,8,.15);padding:6px 14px;border-radius:2px;margin-bottom:24px}
+.tag::before{content:'';width:6px;height:6px;background:var(--amber);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-family:var(--mono);font-size:clamp(28px,4vw,42px);font-weight:700;line-height:1.15;letter-spacing:-.02em;margin-bottom:16px}
+h1 span{color:var(--amber)}
+.sub{font-size:16px;color:var(--c2);max-width:620px;line-height:1.6}
+.meta{display:flex;gap:24px;margin-top:28px;flex-wrap:wrap}
+.meta-chip{font-family:var(--mono);font-size:12px;color:var(--c3);display:flex;align-items:center;gap:6px}
+.meta-chip b{color:var(--c2);font-weight:500}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(244,245,247,.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--bdr)}
+.nav-inner{display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.nav-inner::-webkit-scrollbar{display:none}
+.nav-inner a{font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--c3);text-decoration:none;padding:14px 18px;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.nav-inner a:hover{color:var(--c2);border-bottom-color:var(--bdr-hi)}
+
+/* SECTIONS */
+section{padding:64px 0;border-bottom:1px solid var(--bdr)}
+section:last-of-type{border-bottom:none}
+.slabel{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--amber-d);margin-bottom:12px}
+h2{font-family:var(--mono);font-size:22px;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
+.sdesc{color:var(--c2);font-size:14px;margin-bottom:32px;max-width:700px}
+h3{font-family:var(--mono);font-size:15px;font-weight:600;margin:36px 0 16px;padding-left:12px;border-left:2px solid var(--amber)}
+
+/* TABLES */
+.tw{overflow-x:auto;margin:20px 0 28px;border:1px solid var(--bdr);border-radius:4px;background:var(--bg-card)}
+table{width:100%;border-collapse:collapse;font-size:13px;font-family:var(--mono)}
+thead th{background:var(--bg-th);color:var(--c2);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:12px 16px;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap}
+tbody td{padding:10px 16px;border-bottom:1px solid var(--bdr);white-space:nowrap}
+tbody tr:nth-child(even){background:var(--bg-tr-alt)}
+tbody tr:hover{background:rgba(59,130,246,.04)}
+tbody tr:last-child td{border-bottom:none}
+.hi{color:var(--amber);font-weight:600}
+.dm{color:var(--c3)}
+.gd{color:var(--green);font-weight:600}
+.wr{color:var(--amber);font-weight:600}
+.bd{color:var(--red);font-weight:500}
+
+/* STAT CARDS */
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:24px 0}
+.sc{background:var(--bg-card);border:1px solid var(--bdr);border-radius:4px;padding:20px;position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--amber) 0%,transparent 100%)}
+.sc.bl::after{background:linear-gradient(90deg,var(--blue) 0%,transparent 100%)}
+.sc.gr::after{background:linear-gradient(90deg,var(--green) 0%,transparent 100%)}
+.sv{font-family:var(--mono);font-size:28px;font-weight:700;margin-bottom:4px}
+.sv small{font-size:16px;color:var(--c3);font-weight:400}
+.sl{font-family:var(--mono);font-size:11px;color:var(--c3);text-transform:uppercase;letter-spacing:.08em}
+.ss{font-size:12px;color:var(--c3);margin-top:8px}
+
+/* CALLOUTS */
+.co{background:var(--bg-card);border:1px solid var(--bdr);border-left:3px solid var(--amber);border-radius:3px;padding:20px 24px;margin:24px 0;font-size:14px}
+.co.cob{border-left-color:var(--blue)}
+.co.cog{border-left-color:var(--green)}
+.co.cor{border-left-color:var(--red)}
+.co-t{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+.co.cob .co-t{color:var(--blue)}
+.co.cog .co-t{color:var(--green)}
+.co.cor .co-t{color:var(--red)}
+.co p{color:var(--c2);line-height:1.6}
+.co code{font-family:var(--mono);font-size:12px;background:rgba(0,0,0,.05);padding:2px 7px;border-radius:3px;color:var(--cyan)}
+
+/* FORMULA */
+.fm{background:var(--bg-card-alt);border:1px solid var(--bdr);border-radius:4px;padding:20px 24px;margin:20px 0;font-family:var(--mono);font-size:14px;color:var(--cyan);line-height:2}
+.fm .fl{color:var(--c3);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+
+/* RPM BARS */
+.rpm-bars{display:flex;flex-direction:column;gap:12px;margin:24px 0}
+.rpm-row{display:grid;grid-template-columns:70px 1fr 100px;align-items:center;gap:16px}
+.rpm-lbl{font-family:var(--mono);font-size:13px;font-weight:600}
+.rpm-trk{height:24px;background:var(--bg-card);border:1px solid var(--bdr);border-radius:2px;position:relative;overflow:hidden}
+.rpm-fill{height:100%;border-radius:1px;position:relative}
+.rpm-fill.haas{background:linear-gradient(90deg,var(--red-d),var(--red));opacity:.8}
+.rpm-fill.ideal{background:linear-gradient(90deg,var(--green-d),var(--green));opacity:.6}
+.rpm-fill .rv{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:10px;font-weight:600;color:white;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.rpm-pct{font-family:var(--mono);font-size:12px;color:var(--red);font-weight:600;text-align:right}
+
+/* GAUGE RINGS */
+.gauges{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:24px 0}
+.gauge{background:var(--bg-card);border:1px solid var(--bdr);border-radius:4px;padding:16px;text-align:center}
+.gauge-lbl{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--c3);margin-bottom:12px}
+.gauge-ring{width:100px;height:100px;margin:0 auto 12px;position:relative}
+.gauge-ring svg{transform:rotate(-90deg)}
+.gauge-ring .bg{fill:none;stroke:var(--bdr);stroke-width:6}
+.gauge-ring .fg{fill:none;stroke-width:6;stroke-linecap:round}
+.gauge-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:18px;font-weight:700}
+.gauge-w{font-family:var(--mono);font-size:13px;color:var(--c2);font-weight:500}
+.gauge-d{font-size:11px;color:var(--c3);margin-top:4px}
+
+/* BATTERY CARDS */
+.batt-row{display:flex;gap:20px;flex-wrap:wrap;margin:24px 0}
+.batt-card{flex:1;min-width:240px;background:var(--bg-card);border:1px solid var(--bdr);border-radius:4px;padding:20px}
+.batt-name{font-family:var(--mono);font-size:12px;font-weight:600;margin-bottom:4px}
+.batt-spec{font-family:var(--mono);font-size:11px;color:var(--c3);margin-bottom:16px}
+.batt-bars{display:flex;flex-direction:column;gap:8px}
+.bb-row{display:grid;grid-template-columns:50px 1fr 55px;align-items:center;gap:8px}
+.bb-tool{font-family:var(--mono);font-size:11px;color:var(--c3)}
+.bb-trk{height:14px;background:var(--bg-tr);border-radius:2px;overflow:hidden}
+.bb-fill{height:100%;border-radius:2px;min-width:2px}
+.bb-time{font-family:var(--mono);font-size:11px;font-weight:600;text-align:right}
+
+/* CALCULATOR */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:24px 0}
+.calc-grid label{display:flex;flex-direction:column;gap:6px;font-family:var(--mono);font-size:11px;color:var(--c3);text-transform:uppercase;letter-spacing:.06em}
+.calc-grid select,.calc-grid input{font-family:var(--mono);font-size:14px;padding:10px 12px;background:var(--bg-card);border:1px solid var(--bdr);border-radius:3px;color:var(--c1);outline:none;transition:border-color .2s}
+.calc-grid select:focus,.calc-grid input:focus{border-color:var(--amber-d)}
+.calc-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:20px 0}
+.calc-card{background:var(--bg-card);border:1px solid var(--bdr);border-radius:4px;padding:16px 20px}
+.calc-card h4{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--c3);margin-bottom:6px}
+.calc-card .cv{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--amber)}
+.calc-card .cu{font-size:12px;color:var(--c3);margin-top:4px;font-family:var(--mono)}
+
+/* CODE BLOCK */
+pre{background:var(--bg-card-alt);border:1px solid var(--bdr);border-radius:4px;padding:20px 24px;margin:20px 0;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--cyan);white-space:pre;tab-size:2}
+pre .cmt{color:var(--c3)}
+pre .kw{color:var(--amber)}
+pre .var{color:var(--green)}
+pre .str{color:#be185d}
+pre .num{color:var(--blue)}
+
+/* SOURCES */
+.src-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin:24px 0}
+.src-card{background:var(--bg-card);border:1px solid var(--bdr);border-radius:4px;padding:16px;text-decoration:none;transition:all .2s;display:block}
+.src-card:hover{border-color:var(--bdr-hi);background:var(--bg-card-alt)}
+.src-dom{font-family:var(--mono);font-size:10px;color:var(--amber-d);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.src-title{font-size:13px;font-weight:500;color:var(--c1);line-height:1.4;margin-bottom:4px}
+.src-url{font-family:var(--mono);font-size:10px;color:var(--c3);word-break:break-all}
+
+/* FOOTER */
+footer{padding:40px 0;border-top:1px solid var(--bdr);text-align:center}
+footer p{font-family:var(--mono);font-size:11px;color:var(--c3)}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  header{padding:48px 0 40px}
+  section{padding:40px 0}
+  .sg{grid-template-columns:1fr}
+  .rpm-row{grid-template-columns:55px 1fr 70px}
+  .nav-inner a{padding:12px 14px;font-size:10px}
+  table{font-size:11px}
+  thead th,tbody td{padding:8px 10px}
+  .batt-row{flex-direction:column}
+  .gauges{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header>
+  <div class="ctr">
+    <div class="tag">Technical Analysis</div>
+    <h1>Battery-Powered <span>Spindle Enhancer</span><br>Energy Analysis</h1>
+    <p class="sub">Spindle load and energy consumption for slotting 6061-T6 aluminium with 1.0–2.5&thinsp;mm micro endmills on Haas VF-4, VF-5, and VF-6 machining centres.</p>
+    <div class="meta">
+      <div class="meta-chip">Material <b>6061-T6 Aluminium</b></div>
+      <div class="meta-chip">Tools <b>1.0 – 2.5 mm Carbide</b></div>
+      <div class="meta-chip">Operation <b>Full-Width Slotting</b></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════ NAV ═══════════ -->
+<nav>
+  <div class="ctr">
+    <div class="nav-inner">
+      <a href="#specs">Specs</a>
+      <a href="#load-meter">Load Meter</a>
+      <a href="#rpm-problem">RPM Problem</a>
+      <a href="#cutting-power">Cutting Power</a>
+      <a href="#energy">Energy (kJ)</a>
+      <a href="#battery">Battery Life</a>
+      <a href="#calculator">Calculator</a>
+      <a href="#macro-logger">Macro Logger</a>
+      <a href="#sources">Sources</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════ 01: SPECS ═══════════ -->
+<section id="specs">
+  <div class="ctr">
+    <div class="slabel">01 — Machine Specifications</div>
+    <h2>Haas VF-4 / VF-5 / VF-6</h2>
+    <p class="sdesc">Current-production models. All three ship standard with the same 30&thinsp;hp inline direct-drive spindle in 40-taper configuration.</p>
+
+    <div class="sg">
+      <div class="sc"><div class="sv">30 <small>hp</small></div><div class="sl">Peak Spindle Power</div><div class="ss">22.4 kW — 3 min duty</div></div>
+      <div class="sc bl"><div class="sv">11.2 <small>kW</small></div><div class="sl">Continuous Power</div><div class="ss">15 hp — 100% load, indefinite</div></div>
+      <div class="sc gr"><div class="sv">8,100 <small>rpm</small></div><div class="sl">Max Spindle Speed</div><div class="ss">Standard 40-taper spindle</div></div>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Machine</th><th>Taper</th><th>Peak Power</th><th>Continuous</th><th>Max RPM</th></tr></thead>
+        <tbody>
+          <tr><td class="hi">VF-4</td><td>CAT 40</td><td>30 hp / 22.4 kW</td><td>15 hp / 11.2 kW</td><td>8,100</td></tr>
+          <tr><td class="hi">VF-5/40</td><td>CAT 40</td><td>30 hp / 22.4 kW</td><td>15 hp / 11.2 kW</td><td>8,100</td></tr>
+          <tr><td class="hi">VF-6/40</td><td>CAT 40</td><td>30 hp / 22.4 kW</td><td>15 hp / 11.2 kW</td><td>8,100</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="co">
+      <div class="co-t">Note — Older VF-4 Models</div>
+      <p>Some older VF-4s shipped with a 20&thinsp;hp (14.9&thinsp;kW peak / 7.5&thinsp;kW continuous) spindle. Check Parameter 295 or the spindle label to confirm.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 02: LOAD METER ═══════════ -->
+<section id="load-meter">
+  <div class="ctr">
+    <div class="slabel">02 — How The Load Meter Works</div>
+    <h2>Haas Spindle Load Percentage</h2>
+    <p class="sdesc">The load meter on the Haas control is scaled to the <strong>continuous</strong> motor rating. 100% load = continuous power, not peak.</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Load Meter</th><th>% of Peak</th><th>Actual Power</th><th>Max Duration</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="gd">50%</td><td>25%</td><td>5.6 kW</td><td>Indefinite</td><td class="dm">Light cutting</td></tr>
+          <tr><td class="gd">100%</td><td>50%</td><td>11.2 kW</td><td>Indefinite</td><td class="dm">Continuous rated</td></tr>
+          <tr><td class="wr">150%</td><td>75%</td><td>16.8 kW</td><td>10–15 min*</td><td class="dm">Overload zone</td></tr>
+          <tr><td class="bd">200%</td><td>100%</td><td>22.4 kW</td><td>3 min</td><td class="dm">Peak — thermal limit</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="co cob">
+      <div class="co-t">150% Duty Time</div>
+      <p>Haas's own docs are inconsistent — some pages state 10 minutes, others 15 minutes for 150% load. May vary by spindle model or drive generation.</p>
+    </div>
+
+    <div class="fm">
+      <div class="fl">Conversion Formulae</div>
+      Power (kW) = (Load% &divide; 100) &times; 11.2 kW<br>
+      Energy (kJ) = Power (kW) &times; Time (seconds)<br>
+      <span style="color:var(--c3)">1 Wh = 3.6 kJ</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 03: RPM PROBLEM ═══════════ -->
+<section id="rpm-problem">
+  <div class="ctr">
+    <div class="slabel">03 — The RPM Problem</div>
+    <h2>Haas Can't Spin Fast Enough</h2>
+    <p class="sdesc">Micro endmills need 30,000–80,000 RPM for proper surface speed in aluminium. At 8,100 RPM these tools run at 10–25% of optimal — rubbing, not cutting.</p>
+
+    <div class="rpm-bars">
+      <div class="rpm-row"><div class="rpm-lbl">1.0 mm</div><div class="rpm-trk"><div class="rpm-fill ideal" style="width:100%"><span class="rv">79,577 ideal</span></div></div><div class="rpm-pct"></div></div>
+      <div class="rpm-row"><div class="rpm-lbl"></div><div class="rpm-trk"><div class="rpm-fill haas" style="width:10.2%"><span class="rv">8,100</span></div></div><div class="rpm-pct">10% Vc</div></div>
+      <div class="rpm-row" style="margin-top:10px"><div class="rpm-lbl">1.5 mm</div><div class="rpm-trk"><div class="rpm-fill ideal" style="width:66.7%"><span class="rv">53,052 ideal</span></div></div><div class="rpm-pct"></div></div>
+      <div class="rpm-row"><div class="rpm-lbl"></div><div class="rpm-trk"><div class="rpm-fill haas" style="width:10.2%"><span class="rv">8,100</span></div></div><div class="rpm-pct">15% Vc</div></div>
+      <div class="rpm-row" style="margin-top:10px"><div class="rpm-lbl">2.0 mm</div><div class="rpm-trk"><div class="rpm-fill ideal" style="width:50%"><span class="rv">39,789 ideal</span></div></div><div class="rpm-pct"></div></div>
+      <div class="rpm-row"><div class="rpm-lbl"></div><div class="rpm-trk"><div class="rpm-fill haas" style="width:10.2%"><span class="rv">8,100</span></div></div><div class="rpm-pct">20% Vc</div></div>
+      <div class="rpm-row" style="margin-top:10px"><div class="rpm-lbl">2.5 mm</div><div class="rpm-trk"><div class="rpm-fill ideal" style="width:40%"><span class="rv">31,831 ideal</span></div></div><div class="rpm-pct"></div></div>
+      <div class="rpm-row"><div class="rpm-lbl"></div><div class="rpm-trk"><div class="rpm-fill haas" style="width:10.2%"><span class="rv">8,100</span></div></div><div class="rpm-pct">25% Vc</div></div>
+    </div>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Endmill</th><th>Ideal RPM (Vc 250)</th><th>Haas Max</th><th>Actual Vc @ 8,100</th><th>% of Optimal</th></tr></thead>
+        <tbody>
+          <tr><td class="hi">1.0 mm</td><td>79,577</td><td>8,100</td><td class="bd">25 m/min</td><td class="bd">10%</td></tr>
+          <tr><td class="hi">1.5 mm</td><td>53,052</td><td>8,100</td><td class="bd">38 m/min</td><td class="bd">15%</td></tr>
+          <tr><td class="hi">2.0 mm</td><td>39,789</td><td>8,100</td><td class="bd">51 m/min</td><td class="bd">20%</td></tr>
+          <tr><td class="hi">2.5 mm</td><td>31,831</td><td>8,100</td><td class="bd">64 m/min</td><td class="bd">25%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="co cor">
+      <div class="co-t">Why This Matters</div>
+      <p>At 10–25% of optimal surface speed, the tool rubs rather than shears. This causes excessive heat, poor finish, rapid wear, and breakage risk. A spindle enhancer running 30,000–60,000 RPM is mandatory for these tool sizes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 04: CUTTING POWER ═══════════ -->
+<section id="cutting-power">
+  <div class="ctr">
+    <div class="slabel">04 — Cutting Power at Enhanced RPM</div>
+    <h2>Power Consumption — 6061-T6 Slotting</h2>
+    <p class="sdesc">2-flute carbide, full-width slot (ae = D), enhanced RPM. Unit power: 0.33 hp/(in&sup3;/min) for 6061-T6.</p>
+
+    <h3>At 1&times;D Axial Depth</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Endmill</th><th>RPM</th><th>Vc (m/min)</th><th>fz (mm)</th><th>Feed (mm/min)</th><th>MRR (cm&sup3;/min)</th><th>Cutting Power</th></tr></thead>
+        <tbody>
+          <tr><td class="hi">1.0 mm</td><td>60,000</td><td>188</td><td>0.015</td><td>1,800</td><td>1.8</td><td class="gd">27 W</td></tr>
+          <tr><td class="hi">1.5 mm</td><td>40,000</td><td>188</td><td>0.020</td><td>1,600</td><td>3.6</td><td class="gd">54 W</td></tr>
+          <tr><td class="hi">2.0 mm</td><td>40,000</td><td>251</td><td>0.025</td><td>2,000</td><td>8.0</td><td class="gd">120 W</td></tr>
+          <tr><td class="hi">2.5 mm</td><td>32,000</td><td>251</td><td>0.030</td><td>1,920</td><td>12.0</td><td class="gd">180 W</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>At 0.5&times;D Axial Depth (Conservative)</h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Endmill</th><th>Cutting Power</th><th>Haas Load Equiv.</th></tr></thead>
+        <tbody>
+          <tr><td class="hi">1.0 mm</td><td class="gd">14 W</td><td class="dm">&asymp; 0%</td></tr>
+          <tr><td class="hi">1.5 mm</td><td class="gd">27 W</td><td class="dm">&asymp; 0%</td></tr>
+          <tr><td class="hi">2.0 mm</td><td class="gd">60 W</td><td class="dm">&asymp; 0%</td></tr>
+          <tr><td class="hi">2.5 mm</td><td class="gd">90 W</td><td class="dm">&asymp; 0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="co cog">
+      <div class="co-t">Key Insight</div>
+      <p>At 1–2.5 mm endmill sizes, cutting forces are <strong>trivial</strong> — 14 to 180 watts. The Haas load meter won't register any increase. The enhancer motor's no-load friction (bearing drag, windage at 40k+ RPM) dominates total power draw.</p>
+    </div>
+
+    <h3>Total Power Draw (Cutting + Motor Losses)</h3>
+    <p class="sdesc">A compact high-speed spindle motor draws approximately 100–200 W just spinning, before any cutting load.</p>
+
+    <div class="gauges">
+      <div class="gauge">
+        <div class="gauge-lbl">1.0 mm Endmill</div>
+        <div class="gauge-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42" stroke="#15803d" stroke-dasharray="264" stroke-dashoffset="217"/></svg>
+          <div class="gauge-val" style="color:var(--green)">177<span style="font-size:10px">W</span></div>
+        </div>
+        <div class="gauge-w">27 W cut + 150 W motor</div>
+        <div class="gauge-d">10.6 kJ/min</div>
+      </div>
+      <div class="gauge">
+        <div class="gauge-lbl">1.5 mm Endmill</div>
+        <div class="gauge-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42" stroke="#15803d" stroke-dasharray="264" stroke-dashoffset="210"/></svg>
+          <div class="gauge-val" style="color:var(--green)">204<span style="font-size:10px">W</span></div>
+        </div>
+        <div class="gauge-w">54 W cut + 150 W motor</div>
+        <div class="gauge-d">12.2 kJ/min</div>
+      </div>
+      <div class="gauge">
+        <div class="gauge-lbl">2.0 mm Endmill</div>
+        <div class="gauge-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42" stroke="#a07608" stroke-dasharray="264" stroke-dashoffset="192"/></svg>
+          <div class="gauge-val" style="color:var(--amber)">270<span style="font-size:10px">W</span></div>
+        </div>
+        <div class="gauge-w">120 W cut + 150 W motor</div>
+        <div class="gauge-d">16.2 kJ/min</div>
+      </div>
+      <div class="gauge">
+        <div class="gauge-lbl">2.5 mm Endmill</div>
+        <div class="gauge-ring">
+          <svg width="100" height="100" viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42" stroke="#a07608" stroke-dasharray="264" stroke-dashoffset="176"/></svg>
+          <div class="gauge-val" style="color:var(--amber)">330<span style="font-size:10px">W</span></div>
+        </div>
+        <div class="gauge-w">180 W cut + 150 W motor</div>
+        <div class="gauge-d">19.8 kJ/min</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 05: ENERGY ═══════════ -->
+<section id="energy">
+  <div class="ctr">
+    <div class="slabel">05 — Energy Consumption</div>
+    <h2>Energy in Kilojoules</h2>
+    <p class="sdesc">Total energy consumed (cutting + motor losses) over time for battery capacity planning.</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Endmill</th><th>Total Power</th><th>1 min</th><th>5 min</th><th>10 min</th><th>30 min</th><th>60 min</th></tr></thead>
+        <tbody>
+          <tr><td class="hi">1.0 mm</td><td>177 W</td><td>10.6 kJ</td><td>53 kJ</td><td>106 kJ</td><td>318 kJ</td><td>637 kJ</td></tr>
+          <tr><td class="hi">1.5 mm</td><td>204 W</td><td>12.2 kJ</td><td>61 kJ</td><td>122 kJ</td><td>367 kJ</td><td>734 kJ</td></tr>
+          <tr><td class="hi">2.0 mm</td><td>270 W</td><td>16.2 kJ</td><td>81 kJ</td><td>162 kJ</td><td>486 kJ</td><td>972 kJ</td></tr>
+          <tr><td class="hi">2.5 mm</td><td>330 W</td><td>19.8 kJ</td><td>99 kJ</td><td>198 kJ</td><td>594 kJ</td><td>1,188 kJ</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>At Haas Native 8,100 RPM (No Enhancer)</h3>
+    <p class="sdesc">For comparison — cutting-only power at 8,100 RPM with typical chiploads. These tools barely register on the spindle.</p>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Tool dia</th><th>Cutting Power</th><th>Energy Rate</th><th>Haas Load %</th></tr></thead>
+        <tbody>
+          <tr><td class="hi">1.0 mm</td><td class="dm">0.4 – 1.3 W</td><td class="dm">0.02 – 0.08 kJ/min</td><td class="dm">0.003 – 0.012%</td></tr>
+          <tr><td class="hi">1.5 mm</td><td class="dm">1.3 – 4.3 W</td><td class="dm">0.08 – 0.26 kJ/min</td><td class="dm">0.011 – 0.038%</td></tr>
+          <tr><td class="hi">2.0 mm</td><td class="dm">3.0 – 10.6 W</td><td class="dm">0.18 – 0.64 kJ/min</td><td class="dm">0.027 – 0.095%</td></tr>
+          <tr><td class="hi">2.5 mm</td><td class="dm">5.9 – 21.3 W</td><td class="dm">0.35 – 1.28 kJ/min</td><td class="dm">0.053 – 0.190%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 06: BATTERY LIFE ═══════════ -->
+<section id="battery">
+  <div class="ctr">
+    <div class="slabel">06 — Battery Life Estimates</div>
+    <h2>Runtime by Battery Pack</h2>
+    <p class="sdesc">At 60% overall efficiency (motor + inverter losses). Real-world runtime will be longer since cutting time is only a fraction of total cycle time.</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Battery</th><th>Capacity</th><th>1.0 mm</th><th>1.5 mm</th><th>2.0 mm</th><th>2.5 mm</th></tr></thead>
+        <tbody>
+          <tr><td>Milwaukee M18 5Ah</td><td class="dm">324 kJ (90 Wh)</td><td class="gd">18 min</td><td class="gd">16 min</td><td class="wr">12 min</td><td class="wr">10 min</td></tr>
+          <tr><td>Milwaukee M18 9Ah</td><td class="dm">583 kJ (162 Wh)</td><td class="gd">33 min</td><td class="gd">29 min</td><td class="gd">22 min</td><td class="gd">18 min</td></tr>
+          <tr><td>Milwaukee M18 12Ah</td><td class="dm">778 kJ (216 Wh)</td><td class="gd">44 min</td><td class="gd">38 min</td><td class="gd">29 min</td><td class="gd">24 min</td></tr>
+          <tr><td>DeWalt FlexVolt 12Ah</td><td class="dm">864 kJ (240 Wh)</td><td class="gd">49 min</td><td class="gd">43 min</td><td class="gd">32 min</td><td class="gd">26 min</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="batt-row">
+      <div class="batt-card">
+        <div class="batt-name">Milwaukee M18 9Ah</div>
+        <div class="batt-spec">583 kJ / 162 Wh — 18V nominal</div>
+        <div class="batt-bars">
+          <div class="bb-row"><div class="bb-tool">1.0 mm</div><div class="bb-trk"><div class="bb-fill" style="width:75%;background:var(--green)"></div></div><div class="bb-time" style="color:var(--green)">33 min</div></div>
+          <div class="bb-row"><div class="bb-tool">1.5 mm</div><div class="bb-trk"><div class="bb-fill" style="width:66%;background:var(--green)"></div></div><div class="bb-time" style="color:var(--green)">29 min</div></div>
+          <div class="bb-row"><div class="bb-tool">2.0 mm</div><div class="bb-trk"><div class="bb-fill" style="width:50%;background:var(--amber)"></div></div><div class="bb-time" style="color:var(--amber)">22 min</div></div>
+          <div class="bb-row"><div class="bb-tool">2.5 mm</div><div class="bb-trk"><div class="bb-fill" style="width:41%;background:var(--amber)"></div></div><div class="bb-time" style="color:var(--amber)">18 min</div></div>
+        </div>
+      </div>
+      <div class="batt-card">
+        <div class="batt-name">Milwaukee M18 12Ah</div>
+        <div class="batt-spec">778 kJ / 216 Wh — 18V nominal</div>
+        <div class="batt-bars">
+          <div class="bb-row"><div class="bb-tool">1.0 mm</div><div class="bb-trk"><div class="bb-fill" style="width:100%;background:var(--green)"></div></div><div class="bb-time" style="color:var(--green)">44 min</div></div>
+          <div class="bb-row"><div class="bb-tool">1.5 mm</div><div class="bb-trk"><div class="bb-fill" style="width:86%;background:var(--green)"></div></div><div class="bb-time" style="color:var(--green)">38 min</div></div>
+          <div class="bb-row"><div class="bb-tool">2.0 mm</div><div class="bb-trk"><div class="bb-fill" style="width:66%;background:var(--green)"></div></div><div class="bb-time" style="color:var(--green)">29 min</div></div>
+          <div class="bb-row"><div class="bb-tool">2.5 mm</div><div class="bb-trk"><div class="bb-fill" style="width:55%;background:var(--green)"></div></div><div class="bb-time" style="color:var(--green)">24 min</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="co cog">
+      <div class="co-t">Verdict — Very Viable</div>
+      <p>An M18 9Ah pack delivers <strong>18–33 minutes of continuous slotting</strong>. Since cutting time is only a fraction of total cycle time (tool changes, rapids, probing), real-world runtime per charge stretches further. The design constraint isn't power — it's <strong>RPM and runout</strong>. At 1 mm diameter, even 5 microns of TIR is significant.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 07: CALCULATOR ═══════════ -->
+<section id="calculator">
+  <div class="ctr">
+    <div class="slabel">07 — Live Calculator</div>
+    <h2>Load &rarr; kJ &rarr; Battery Runtime</h2>
+    <p class="sdesc">Enter your observed spindle load and battery specs to calculate energy consumption and runtime.</p>
+
+    <div class="calc-grid">
+      <label>Machine
+        <select id="c-machine">
+          <option value="11.2">VF-4 / VF-5 / VF-6 (30 hp — 11.2 kW cont.)</option>
+          <option value="7.5">VF-4 Legacy (20 hp — 7.5 kW cont.)</option>
+        </select>
+      </label>
+      <label>Spindle Load (%)
+        <input id="c-load" type="number" min="0" max="200" step="0.1" value="60">
+      </label>
+      <label>Cut Duration (min)
+        <input id="c-dur" type="number" min="0" step="0.1" value="10">
+      </label>
+      <label>Battery Capacity (Wh)
+        <input id="c-batt" type="number" min="0" step="1" value="162">
+      </label>
+      <label>Efficiency (%)
+        <input id="c-eff" type="number" min="1" max="100" step="1" value="60">
+      </label>
+    </div>
+
+    <div class="calc-results">
+      <div class="calc-card"><h4>Power Draw</h4><div class="cv" id="r-power">—</div><div class="cu" id="r-power-hp"></div></div>
+      <div class="calc-card"><h4>Energy Rate</h4><div class="cv" id="r-rate">—</div><div class="cu">per minute</div></div>
+      <div class="calc-card"><h4>Total Energy</h4><div class="cv" id="r-total">—</div><div class="cu" id="r-total-wh"></div></div>
+      <div class="calc-card"><h4>Battery Runtime</h4><div class="cv" id="r-runtime">—</div><div class="cu">at this load</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 08: MACRO LOGGER ═══════════ -->
+<section id="macro-logger">
+  <div class="ctr">
+    <div class="slabel">08 — Haas Macro Logger</div>
+    <h2>Spindle Load Data Capture (O9010)</h2>
+    <p class="sdesc">A Haas G-code macro that logs spindle load via <code>#1098</code> and outputs CSV-ready data through DPRNT. Captures time, load %, calculated power, and cumulative energy.</p>
+
+    <div class="tw">
+      <table>
+        <thead><tr><th>Variable</th><th>Returns</th><th>Type</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="hi">#1098</td><td>Spindle Load (%)</td><td>Read-only</td><td>Vector drive load — <strong>use this one</strong></td></tr>
+          <tr><td class="hi">#3027</td><td>Spindle RPM</td><td>Read-only</td><td>Actual speed (not commanded)</td></tr>
+          <tr><td class="hi">#3026</td><td>Tool in Spindle</td><td>Read-only</td><td>Current tool number</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Setup Steps</h3>
+    <div class="co">
+      <div class="co-t">Before Running</div>
+      <p>1. Set <code>Setting 261</code> (DPRNT destination) to <strong>File</strong> or <strong>TCP Port</strong>.<br>
+      2. If using File mode, set <code>Setting 262</code> to your output folder or USB path.<br>
+      3. Load <code>O9010</code> into program memory.<br>
+      4. Call <code>M98 P9010</code> from your main program, or run O9010 standalone during a test cut.</p>
+    </div>
+
+    <h3>O9010.NC — Logger Program</h3>
+<pre>
+<span class="cmt">( O9010 - SPINDLE LOAD LOGGER )</span>
+<span class="cmt">( Logs #1098 spindle load via DPRNT at 1-second intervals )</span>
+<span class="cmt">( Output: CSV-ready — SAMPLE,TIME_S,LOAD_PCT,POWER_KW,ENERGY_KJ )</span>
+<span class="cmt">( Requires: Setting 261 = File or TCP, Setting 262 = path )</span>
+<span class="cmt">( Continuous rating variable — set for your machine: )</span>
+<span class="var">#500</span> = <span class="num">11.2</span>        <span class="cmt">( Continuous kW — 11.2 for 30hp, 7.5 for 20hp )</span>
+<span class="var">#501</span> = <span class="num">1.0</span>         <span class="cmt">( Sample interval in seconds )</span>
+<span class="var">#502</span> = <span class="num">600</span>         <span class="cmt">( Max samples — 600 = 10 minutes at 1s interval )</span>
+<span class="cmt">( --- Working variables --- )</span>
+<span class="var">#510</span> = <span class="num">0</span>           <span class="cmt">( Sample counter )</span>
+<span class="var">#511</span> = <span class="num">0</span>           <span class="cmt">( Elapsed time in seconds )</span>
+<span class="var">#512</span> = <span class="num">0</span>           <span class="cmt">( Cumulative energy in kJ )</span>
+
+<span class="kw">DPRNT</span>[<span class="str">SAMPLE,TIME_S,LOAD_PCT,RPM,POWER_KW,CUM_ENERGY_KJ</span>]
+
+<span class="kw">N100</span>
+<span class="cmt">( Read spindle load and RPM )</span>
+<span class="var">#520</span> = <span class="var">#1098</span>       <span class="cmt">( Spindle load % )</span>
+<span class="var">#521</span> = <span class="var">#3027</span>       <span class="cmt">( Spindle RPM )</span>
+
+<span class="cmt">( Calculate power: load% / 100 * continuous kW )</span>
+<span class="var">#522</span> = [<span class="var">#520</span> / <span class="num">100.0</span>] * <span class="var">#500</span>
+
+<span class="cmt">( Accumulate energy: power_kW * interval_s = kJ )</span>
+<span class="var">#512</span> = <span class="var">#512</span> + [<span class="var">#522</span> * <span class="var">#501</span>]
+
+<span class="cmt">( Output CSV line )</span>
+<span class="kw">DPRNT</span>[<span class="var">#510</span>[<span class="num">40</span>],<span class="var">#511</span>[<span class="num">52</span>],<span class="var">#520</span>[<span class="num">52</span>],<span class="var">#521</span>[<span class="num">60</span>],<span class="var">#522</span>[<span class="num">52</span>],<span class="var">#512</span>[<span class="num">52</span>]]
+
+<span class="cmt">( Increment counters )</span>
+<span class="var">#510</span> = <span class="var">#510</span> + <span class="num">1</span>
+<span class="var">#511</span> = <span class="var">#511</span> + <span class="var">#501</span>
+
+<span class="cmt">( Dwell for sample interval )</span>
+<span class="kw">G04</span> P<span class="var">#501</span>
+
+<span class="cmt">( Loop until max samples reached )</span>
+<span class="kw">IF</span> [<span class="var">#510</span> LT <span class="var">#502</span>] <span class="kw">GOTO</span> <span class="num">100</span>
+
+<span class="kw">DPRNT</span>[<span class="str">LOG_COMPLETE</span>]
+<span class="kw">M99</span>
+</pre>
+
+    <h3>Convert DPRNT Output to CSV</h3>
+    <p class="sdesc">After pulling the DPRNT.OUT file from the machine, run this PowerShell script to produce a clean CSV.</p>
+
+<pre>
+<span class="cmt"># convert_dprnt_to_csv.ps1</span>
+<span class="cmt"># Converts Haas DPRNT output from O9010 to a proper CSV file</span>
+<span class="cmt"># Usage: powershell -ExecutionPolicy Bypass -File convert_dprnt_to_csv.ps1 -InputPath "DPRNT.OUT"</span>
+
+<span class="kw">param</span>(
+    [<span class="str">string</span>]<span class="var">$InputPath</span>  = <span class="str">"DPRNT.OUT"</span>,
+    [<span class="str">string</span>]<span class="var">$OutputPath</span> = <span class="str">"spindle_load_log.csv"</span>
+)
+
+<span class="var">$lines</span> = <span class="kw">Get-Content</span> <span class="var">$InputPath</span>
+<span class="var">$csv</span> = @()
+
+<span class="kw">foreach</span> (<span class="var">$line</span> <span class="kw">in</span> <span class="var">$lines</span>) {
+    <span class="var">$trimmed</span> = <span class="var">$line</span>.Trim()
+    <span class="kw">if</span> (<span class="var">$trimmed</span> -match <span class="str">'^\d'</span>) {
+        <span class="cmt"># Data line — clean up spacing from DPRNT formatting</span>
+        <span class="var">$fields</span> = <span class="var">$trimmed</span> -split <span class="str">','</span> | <span class="kw">ForEach-Object</span> { <span class="var">$_</span>.Trim() }
+        <span class="var">$csv</span> += <span class="var">$fields</span> -join <span class="str">','</span>
+    }
+    <span class="kw">elseif</span> (<span class="var">$trimmed</span> -match <span class="str">'SAMPLE'</span>) {
+        <span class="cmt"># Header line</span>
+        <span class="var">$csv</span> += <span class="var">$trimmed</span>
+    }
+}
+
+<span class="var">$csv</span> | <span class="kw">Set-Content</span> <span class="var">$OutputPath</span> -Encoding UTF8
+<span class="kw">Write-Host</span> <span class="str">"Wrote $($csv.Count - 1) samples to $OutputPath"</span>
+</pre>
+
+    <div class="co">
+      <div class="co-t">Practical Note</div>
+      <p>For micro endmill work through a battery-powered enhancer, <code>#1098</code> will show near-zero since the Haas spindle isn't doing the cutting. Real load data should be captured from the enhancer motor's current draw — via a clamp ammeter on the battery leads or an inline power meter. The macro logger is most useful for baseline measurements with larger tools run directly in the Haas spindle.</p>
+    </div>
+
+    <h3>Quick Conversion Reference</h3>
+    <div class="fm">
+      <div class="fl">From Haas Load Meter to Energy</div>
+      kJ/min = (Load% &divide; 100) &times; 11.2 &times; 60 = <span style="color:var(--amber)">6.72 &times; Load%</span><br>
+      <span style="color:var(--c3)">Example: 50% load &rarr; 6.72 &times; 0.50 = 3.36 kJ/min</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ 09: SOURCES ═══════════ -->
+<section id="sources">
+  <div class="ctr">
+    <div class="slabel">09 — Sources</div>
+    <h2>References &amp; Documentation</h2>
+    <p class="sdesc">Specifications verified against official Haas documentation and manufacturer datasheets.</p>
+
+    <div class="src-grid">
+      <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-4.html" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">haascnc.com</div>
+        <div class="src-title">VF-4 — 40-Taper Vertical Mill Specifications</div>
+        <div class="src-url">haascnc.com/.../vf-4.html</div>
+      </a>
+      <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-5-40.html" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">haascnc.com</div>
+        <div class="src-title">VF-5/40 — 40-Taper Vertical Mill Specifications</div>
+        <div class="src-url">haascnc.com/.../vf-5-40.html</div>
+      </a>
+      <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/large/vf-6-40.html" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">haascnc.com</div>
+        <div class="src-title">VF-6/40 — 40-Taper Vertical Mill Specifications</div>
+        <div class="src-url">haascnc.com/.../vf-6-40.html</div>
+      </a>
+      <a href="https://www.haascnc.com/reference-container/torque-chart-note.html" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">haascnc.com</div>
+        <div class="src-title">Torque Chart Note — Load vs Duty Cycle</div>
+        <div class="src-url">haascnc.com/.../torque-chart-note.html</div>
+      </a>
+      <a href="https://www.haascnc.com/productivity/spindles/8-1k-40t-in.html" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">haascnc.com</div>
+        <div class="src-title">8,100-RPM Standard 40-Taper Spindle</div>
+        <div class="src-url">haascnc.com/.../8-1k-40t-in.html</div>
+      </a>
+      <a href="https://www.haascnc.com/service/online-operator-s-manuals/mill-operator-s-manual/mill---macros.html" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">haascnc.com</div>
+        <div class="src-title">Mill Operator's Manual — Macros (#1098, #3027)</div>
+        <div class="src-url">haascnc.com/.../mill---macros.html</div>
+      </a>
+      <a href="https://www.inventcom.net/support/haas/system-macro-variables" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">inventcom.net</div>
+        <div class="src-title">Haas System &amp; Macro Variables Reference</div>
+        <div class="src-url">inventcom.net/support/haas/system-macro-variables</div>
+      </a>
+      <a href="https://www.haascnc.com/service/troubleshooting-and-how-to/how-to/communication-with-external-devices---dprnt.html" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">haascnc.com</div>
+        <div class="src-title">DPRNT Communication Guide</div>
+        <div class="src-url">haascnc.com/.../dprnt.html</div>
+      </a>
+      <a href="https://www.dewalt.com/product/dcb612/20v60v-max-flexvolt-12ah-battery" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">dewalt.com</div>
+        <div class="src-title">DCB612 — 20V/60V FlexVolt 12Ah Battery (240 Wh)</div>
+        <div class="src-url">dewalt.com/product/dcb612</div>
+      </a>
+      <a href="https://premierequipment.com/cnc-blog/haas-cnc-series-guide-vf-st-dt-ec-umc/" target="_blank" rel="noopener" class="src-card">
+        <div class="src-dom">premierequipment.com</div>
+        <div class="src-title">Haas VF, ST, DT, EC, UMC Series Guide</div>
+        <div class="src-url">premierequipment.com/.../haas-cnc-series-guide</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer>
+  <div class="ctr">
+    <p>Spindle Enhancer Energy Analysis — Data verified Feb 2026</p>
+    <p style="margin-top:8px">Unit power: 0.33 hp/(in&sup3;/min) for 6061-T6 &nbsp;|&nbsp; Motor no-load: ~150 W &nbsp;|&nbsp; Battery eff: 60%</p>
+  </div>
+</footer>
+
+<!-- ═══════════ CALCULATOR JS ═══════════ -->
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  function calc(){
+    const contKW = parseFloat($('c-machine').value);
+    const load   = parseFloat($('c-load').value) || 0;
+    const dur    = parseFloat($('c-dur').value) || 0;
+    const battWh = parseFloat($('c-batt').value) || 0;
+    const eff    = (parseFloat($('c-eff').value) || 60) / 100;
+
+    const powerKW  = (load / 100) * contKW;
+    const powerHP  = powerKW / 0.7457;
+    const rateKJ   = powerKW * 60;          // kJ per minute
+    const totalKJ  = powerKW * dur * 60;    // kJ total
+    const totalWh  = totalKJ / 3.6;
+
+    // Battery runtime: usable_energy / power
+    const usableKJ = battWh * 3.6 * eff;
+    const runtimeS = powerKW > 0 ? usableKJ / powerKW : 0;
+    const runtimeM = runtimeS / 60;
+
+    $('r-power').textContent    = powerKW.toFixed(2) + ' kW';
+    $('r-power-hp').textContent = powerHP.toFixed(1) + ' hp';
+    $('r-rate').textContent     = rateKJ.toFixed(1) + ' kJ/min';
+    $('r-total').textContent    = totalKJ.toFixed(0) + ' kJ';
+    $('r-total-wh').textContent = totalWh.toFixed(0) + ' Wh';
+    $('r-runtime').textContent  = runtimeM.toFixed(1) + ' min';
+  }
+
+  // Bind all inputs
+  ['c-machine','c-load','c-dur','c-batt','c-eff'].forEach(id => {
+    $(id).addEventListener('input', calc);
+  });
+
+  // Initial calc
+  calc();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spindle Enhancer Quick Estimator | Haas VF-4/5/6</title>
+  <meta name="description" content="Lean load to kJ and battery runtime estimator for Haas VF-4, VF-5/40, VF-6/40 with 12k spindle option assumptions and macro logging workflow.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f5f7;
+      --bg-card: #ffffff;
+      --bg-card-alt: #f0f1f4;
+      --bg-th: #e4e6ec;
+      --bg-tr: #fafbfc;
+      --bg-tr-alt: #f2f3f6;
+      --bdr: #d0d3dc;
+      --bdr-hi: #b5b9c6;
+      --c1: #1a1d26;
+      --c2: #4b5068;
+      --c3: #6e7389;
+      --amber: #2563eb;
+      --amber-d: #1d4ed8;
+      --amber-g: rgba(37, 99, 235, 0.06);
+      --blue: #2563eb;
+      --green: #15803d;
+      --mono: "IBM Plex Mono", monospace;
+      --sans: "DM Sans", system-ui, sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--c1);
+      font-family: var(--sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .ctr {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      padding: 56px 0 40px;
+      border-bottom: 1px solid var(--bdr);
+      background: radial-gradient(circle at 85% -10%, var(--amber-g), transparent 35%);
+    }
+
+    .tag {
+      display: inline-flex;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      background: var(--amber-g);
+      border: 1px solid rgba(37, 99, 235, 0.18);
+      padding: 6px 12px;
+      border-radius: 3px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-family: var(--mono);
+      font-size: clamp(26px, 4vw, 40px);
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .sub {
+      color: var(--c2);
+      max-width: 76ch;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(244, 245, 247, 0.92);
+      border-bottom: 1px solid var(--bdr);
+      backdrop-filter: blur(8px);
+    }
+
+    .nav-inner {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      white-space: nowrap;
+    }
+
+    .nav-inner::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-inner a {
+      text-decoration: none;
+      color: var(--c3);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 13px 14px;
+      border-bottom: 2px solid transparent;
+    }
+
+    .nav-inner a:hover {
+      color: var(--c2);
+      border-bottom-color: var(--bdr-hi);
+    }
+
+    section {
+      padding: 44px 0;
+      border-bottom: 1px solid var(--bdr);
+    }
+
+    .slabel {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber-d);
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-family: var(--mono);
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .sdesc {
+      color: var(--c2);
+      max-width: 80ch;
+      margin-bottom: 18px;
+    }
+
+    .sg {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin: 18px 0 20px;
+    }
+
+    .sc {
+      background: var(--bg-card);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      padding: 16px;
+    }
+
+    .sv {
+      font-family: var(--mono);
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .sv small {
+      font-size: 14px;
+      color: var(--c3);
+      font-weight: 500;
+    }
+
+    .sl {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--c3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .ss {
+      font-size: 12px;
+      color: var(--c3);
+      margin-top: 6px;
+    }
+
+    .tw {
+      overflow-x: auto;
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      background: var(--bg-card);
+      margin: 14px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    thead th {
+      background: var(--bg-th);
+      color: var(--c2);
+      font-size: 10px;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      text-align: left;
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--bdr);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--bdr);
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) {
+      background: var(--bg-tr-alt);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .hi {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .dm {
+      color: var(--c3);
+    }
+
+    .gd {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .co {
+      background: var(--bg-card);
+      border: 1px solid var(--bdr);
+      border-left: 3px solid var(--blue);
+      border-radius: 3px;
+      padding: 16px 18px;
+      margin-top: 12px;
+      color: var(--c2);
+    }
+
+    .co b {
+      color: var(--c1);
+    }
+
+    .fm {
+      background: var(--bg-card-alt);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin-top: 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: #0e7490;
+      line-height: 1.9;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--c3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    select,
+    input {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--c1);
+      background: var(--bg-card);
+      border: 1px solid var(--bdr);
+      border-radius: 3px;
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    select:focus,
+    input:focus {
+      border-color: var(--bdr-hi);
+    }
+
+    .calc-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .calc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      padding: 14px 16px;
+    }
+
+    .calc-card h4 {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--c3);
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 6px;
+    }
+
+    .cv {
+      font-family: var(--mono);
+      font-size: 23px;
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    .cu {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--c3);
+      margin-top: 4px;
+    }
+
+    ul {
+      margin-left: 18px;
+      color: var(--c2);
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #0e7490;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 2px 5px;
+      border-radius: 3px;
+    }
+
+    .src-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .src-list a {
+      color: var(--c1);
+      text-decoration: none;
+      border: 1px solid var(--bdr);
+      background: var(--bg-card);
+      border-radius: 4px;
+      padding: 10px 12px;
+      display: block;
+    }
+
+    .src-list a:hover {
+      border-color: var(--bdr-hi);
+      background: var(--bg-card-alt);
+    }
+
+    footer {
+      padding: 28px 0 34px;
+      color: var(--c3);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="ctr">
+      <h1>Spindle Enhancer Quick Estimator</h1>
+      <p class="sub">
+        Assumes VF-4 / VF-5/40 / VF-6/40 with the 12k spindle option. Load, energy, and runtime estimates for battery-powered spindle enhancer planning.
+      </p>
+    </div>
+  </header>
+
+  <nav>
+    <div class="ctr">
+      <div class="nav-inner">
+        <a href="#specs">Specs</a>
+        <a href="#slotting">6061 Quick Table</a>
+        <a href="#calculator">Calculator</a>
+        <a href="#macro">Macro Logging</a>
+        <a href="#sources">Sources</a>
+      </div>
+    </div>
+  </nav>
+
+  <section id="specs">
+    <div class="ctr">
+      <div class="slabel">01 | Machine Baseline</div>
+      <h2>Haas VF-4 / VF-5/40 / VF-6/40</h2>
+      <p class="sdesc">Power baseline for load to energy conversion. Max RPM shown as your 12k installed spindle setup.</p>
+
+      <div class="sg">
+        <div class="sc">
+          <div class="sv">30 <small>hp</small></div>
+          <div class="sl">Max Rating</div>
+          <div class="ss">22.4 kW peak</div>
+        </div>
+        <div class="sc">
+          <div class="sv">11.2 <small>kW</small></div>
+          <div class="sl">Continuous Power</div>
+          <div class="ss">Used for 100% load math</div>
+        </div>
+        <div class="sc">
+          <div class="sv">12,000 <small>rpm</small></div>
+          <div class="sl">Max RPM in Your Setup</div>
+          <div class="ss">Option spindle; standard is 8100</div>
+        </div>
+      </div>
+
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Load Meter</th>
+              <th>Power</th>
+              <th>Duty</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="hi">50%</td><td>5.6 kW</td><td>Continuous</td></tr>
+            <tr><td class="hi">100%</td><td>11.2 kW</td><td>Continuous</td></tr>
+            <tr><td class="hi">150%</td><td>16.8 kW</td><td>10 min max</td></tr>
+            <tr><td class="hi">200%</td><td>22.4 kW</td><td>3 min max</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="fm">
+        Power (kW) = (Load% / 100) x 11.2<br>
+        Energy (kJ) = Power (kW) x Time (s)<br>
+        1 Wh = 3.6 kJ
+      </div>
+    </div>
+  </section>
+
+  <section id="slotting">
+    <div class="ctr">
+      <div class="slabel">02 | 6061 Quick Table</div>
+      <h2>1.0 to 2.5 mm Endmills at 12,000 RPM</h2>
+      <p class="sdesc">
+        Cutting-only estimate for full-width slotting with tiny tools. Real spindle electrical draw is higher because no-load and drivetrain losses dominate.
+      </p>
+
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool Dia</th>
+              <th>Cutting Power</th>
+              <th>Energy Rate</th>
+              <th>Load Equiv on 11.2 kW</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="hi">1.0 mm</td><td>0.6 to 1.9 W</td><td>0.03 to 0.12 kJ/min</td><td class="dm">0.004 to 0.018%</td></tr>
+            <tr><td class="hi">1.5 mm</td><td>1.9 to 6.4 W</td><td>0.12 to 0.39 kJ/min</td><td class="dm">0.016 to 0.056%</td></tr>
+            <tr><td class="hi">2.0 mm</td><td>4.4 to 15.7 W</td><td>0.27 to 0.95 kJ/min</td><td class="dm">0.040 to 0.141%</td></tr>
+            <tr><td class="hi">2.5 mm</td><td>8.7 to 31.6 W</td><td>0.52 to 1.90 kJ/min</td><td class="dm">0.079 to 0.282%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="co">
+        <b>Interpretation:</b> if you drive the cutter with an external spindle enhancer, Haas spindle load will not represent enhancer motor load. Log enhancer electrical current separately.
+      </div>
+    </div>
+  </section>
+
+  <section id="calculator">
+    <div class="ctr">
+      <div class="slabel">03 | Calculator</div>
+      <h2>Load to kJ to Runtime</h2>
+      <p class="sdesc">Use observed load from the machine and your battery capacity to estimate runtime.</p>
+
+      <div class="calc-grid">
+        <label>Machine
+          <select id="c-machine">
+            <option value="11.2">VF-4 / VF-5 / VF-6 (30 hp, 11.2 kW continuous)</option>
+            <option value="7.5">VF-4 legacy (20 hp, 7.5 kW continuous)</option>
+          </select>
+        </label>
+        <label>Spindle Load (%)
+          <input id="c-load" type="number" min="0" max="200" step="0.1" value="60">
+        </label>
+        <label>Cut Duration (min)
+          <input id="c-dur" type="number" min="0" step="0.1" value="10">
+        </label>
+        <label>Battery Capacity (Wh)
+          <input id="c-batt" type="number" min="0" step="1" value="240">
+        </label>
+        <label>Efficiency (%)
+          <input id="c-eff" type="number" min="1" max="100" step="1" value="80">
+        </label>
+      </div>
+
+      <div class="calc-results">
+        <div class="calc-card"><h4>Power Draw</h4><div class="cv" id="r-power">-</div><div class="cu" id="r-power-hp">-</div></div>
+        <div class="calc-card"><h4>Energy Rate</h4><div class="cv" id="r-rate">-</div><div class="cu">per minute</div></div>
+        <div class="calc-card"><h4>Total Energy</h4><div class="cv" id="r-total">-</div><div class="cu" id="r-total-wh">-</div></div>
+        <div class="calc-card"><h4>Battery Runtime</h4><div class="cv" id="r-runtime">-</div><div class="cu">at this load</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="macro">
+    <div class="ctr">
+      <div class="slabel">04 | Macro Logging</div>
+      <h2>Haas Data Capture Workflow</h2>
+      <p class="sdesc">Use the logger files in this repo. Keep this step simple and repeatable.</p>
+
+      <ul>
+        <li>Use <code>#1098</code> for spindle load percent and <code>#3027</code> for actual spindle RPM.</li>
+        <li>Run <code>macros/O9010.NC</code> on the control.</li>
+        <li>Export <code>DPRNT.OUT</code> from Setting 261/262 destination.</li>
+        <li>Convert to CSV with <code>scripts/convert_dprnt_to_csv.ps1</code>.</li>
+      </ul>
+
+      <div class="fm">
+        powershell -ExecutionPolicy Bypass -File .\scripts\convert_dprnt_to_csv.ps1 -InputPath "DPRNT.OUT" -OutputPath "slotting_load_log.csv"
+      </div>
+    </div>
+  </section>
+
+  <section id="sources">
+    <div class="ctr">
+      <div class="slabel">05 | Sources</div>
+      <h2>Reference Links</h2>
+      <div class="src-list">
+        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-4.html" target="_blank" rel="noopener">Haas VF-4 Specs</a>
+        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-5-40.html" target="_blank" rel="noopener">Haas VF-5/40 Specs</a>
+        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/large/vf-6-40.html" target="_blank" rel="noopener">Haas VF-6/40 Specs</a>
+        <a href="https://www.haascnc.com/productivity/spindles/12k-40t-in.html" target="_blank" rel="noopener">Haas 12k 40T Spindle Option</a>
+        <a href="https://www.haascnc.com/reference-container/torque-chart-note.html" target="_blank" rel="noopener">Haas Torque Chart Note</a>
+        <a href="https://www.haascnc.com/service/online-operator-s-manuals/mill-operator-s-manual/mill---macros.html" target="_blank" rel="noopener">Haas Mill Macro Variables</a>
+        <a href="https://www.haascnc.com/service/troubleshooting-and-how-to/how-to/communication-with-external-devices---dprnt.html" target="_blank" rel="noopener">Haas DPRNT Guide</a>
+        <a href="https://www.dewalt.com/systems/cordless-platforms/60v/flexvolt-battery-system" target="_blank" rel="noopener">DEWALT FLEXVOLT Battery System</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="ctr">
+      Lean version with 12k assumption and corrected load to energy math.
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const $ = (id) => document.getElementById(id);
+
+      function calc() {
+        const contKW = parseFloat($("c-machine").value);
+        const load = parseFloat($("c-load").value) || 0;
+        const dur = parseFloat($("c-dur").value) || 0;
+        const battWh = parseFloat($("c-batt").value) || 0;
+        const eff = (parseFloat($("c-eff").value) || 80) / 100;
+
+        const powerKW = (load / 100) * contKW;
+        const powerHP = powerKW / 0.7457;
+        const rateKJ = powerKW * 60;
+        const totalKJ = powerKW * dur * 60;
+        const totalWh = totalKJ / 3.6;
+
+        const usableKJ = battWh * 3.6 * eff;
+        const runtimeS = powerKW > 0 ? usableKJ / powerKW : 0;
+        const runtimeM = runtimeS / 60;
+
+        $("r-power").textContent = powerKW.toFixed(2) + " kW";
+        $("r-power-hp").textContent = powerHP.toFixed(1) + " hp";
+        $("r-rate").textContent = rateKJ.toFixed(1) + " kJ/min";
+        $("r-total").textContent = totalKJ.toFixed(0) + " kJ";
+        $("r-total-wh").textContent = totalWh.toFixed(0) + " Wh";
+        $("r-runtime").textContent = runtimeM.toFixed(1) + " min";
+      }
+
+      ["c-machine", "c-load", "c-dur", "c-batt", "c-eff"].forEach((id) => {
+        $(id).addEventListener("input", calc);
+      });
+
+      calc();
+    })();
+  </script>
+</body>
+</html>

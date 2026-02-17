@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Haas Slot Load + Battery Energy Estimator</title>
+  <meta name="description" content="VF-4, VF-5/40, VF-6/40 spindle load to kJ calculator with 6061 micro-slotting estimates and a #1098 Haas macro logger workflow.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <header class="hero">
+    <p class="eyebrow">HAAS VF SLOTTING ENERGY</p>
+    <h1>Load % -> kJ -> battery runtime</h1>
+    <p class="lede">
+      Corrected for Haas load behavior and macro variables. Built for VF-4, VF-5/40, and VF-6/40 with a 6061 micro-slotting view for 1.0 to 2.5 mm endmills.
+    </p>
+    <p class="lede">Alternate layout: <a href="index.html">Open Claude format</a></p>
+  </header>
+
+  <main class="layout">
+    <section class="panel reveal">
+      <h2>Machine Baselines</h2>
+      <p>Current standard spec pages list all three with 30 hp (22.4 kW) max rating and 8100 rpm standard spindle.</p>
+      <div class="chip-row">
+        <span class="chip">VF-4: 22.4 kW max</span>
+        <span class="chip">VF-5/40: 22.4 kW max</span>
+        <span class="chip">VF-6/40: 22.4 kW max</span>
+        <span class="chip alt">100% load = continuous power</span>
+      </div>
+      <div class="math">
+        <p><strong>Power (kW)</strong> = (<strong>Load %</strong> / 100) x <strong>Continuous kW</strong></p>
+        <p><strong>Energy (kJ)</strong> = <strong>Power (kW)</strong> x <strong>Time (s)</strong></p>
+      </div>
+      <p class="note">
+        Haas torque note: 200% load for 3 min, 150% for 10 min, 100% continuous.
+      </p>
+    </section>
+
+    <section class="panel reveal">
+      <h2>Live Calculator</h2>
+      <form id="calc-form" class="form-grid">
+        <label>
+          Machine
+          <select id="machine">
+            <option value="vf4_30">VF-4 (standard 30 hp spindle)</option>
+            <option value="vf5_40">VF-5/40 (standard)</option>
+            <option value="vf6_40">VF-6/40 (standard)</option>
+            <option value="vf4_20">VF-4 (legacy 20 hp spindle option)</option>
+          </select>
+        </label>
+
+        <label>
+          Spindle load (%)
+          <input id="loadPct" type="number" min="0" max="200" step="0.1" value="60">
+        </label>
+
+        <label>
+          Cut duration (minutes)
+          <input id="durationMin" type="number" min="0" step="0.1" value="10">
+        </label>
+
+        <label>
+          Battery capacity (Wh)
+          <input id="batteryWh" type="number" min="0" step="1" value="240">
+        </label>
+
+        <label>
+          Drivetrain efficiency (%)
+          <input id="efficiencyPct" type="number" min="1" max="100" step="1" value="80">
+        </label>
+      </form>
+
+      <div class="results" id="results">
+        <article class="result-card">
+          <h3>Power</h3>
+          <p id="outPowerKw">-</p>
+        </article>
+        <article class="result-card">
+          <h3>Energy Rate</h3>
+          <p id="outKjPerMin">-</p>
+        </article>
+        <article class="result-card">
+          <h3>Total Cut Energy</h3>
+          <p id="outTotalKj">-</p>
+        </article>
+        <article class="result-card">
+          <h3>Battery Runtime @ Load</h3>
+          <p id="outRuntimeMin">-</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="panel reveal">
+      <h2>6061 Slotting Estimates (1.0 to 2.5 mm tools)</h2>
+      <p>
+        Cutting-only estimate for full slotting with tiny tools at 8100 rpm (2-flute, typical chiploads, ap 0.5D to 1.0D).
+        These values are cutter engagement energy only; machine overhead dominates real spindle electrical draw.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool dia (mm)</th>
+              <th>Cutting power (W)</th>
+              <th>Energy rate (kJ/min)</th>
+              <th>Equivalent load % on 11.2 kW base</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1.0</td>
+              <td>0.4 to 1.3</td>
+              <td>0.02 to 0.08</td>
+              <td>0.003 to 0.012%</td>
+            </tr>
+            <tr>
+              <td>1.5</td>
+              <td>1.3 to 4.3</td>
+              <td>0.08 to 0.26</td>
+              <td>0.011 to 0.038%</td>
+            </tr>
+            <tr>
+              <td>2.0</td>
+              <td>3.0 to 10.6</td>
+              <td>0.18 to 0.64</td>
+              <td>0.027 to 0.095%</td>
+            </tr>
+            <tr>
+              <td>2.5</td>
+              <td>5.9 to 21.3</td>
+              <td>0.35 to 1.28</td>
+              <td>0.053 to 0.190%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">
+        Practical note: machine load meter values are usually much higher than these cutting-only percentages because no-load spindle losses and system losses are included.
+      </p>
+    </section>
+
+    <section class="panel reveal">
+      <h2>Haas Macro Logger (Uses #1098)</h2>
+      <p>
+        Use this program to log time, spindle load, calculated power, and cumulative energy through DPRNT output.
+      </p>
+      <pre><code>File: macros/O9010.NC
+Output format: TIME/LOAD/POWER/ENERGY
+Source variable: #1098 (spindle load, read-only)</code></pre>
+
+      <ol>
+        <li>Set Setting 261 to <strong>File</strong> or <strong>TCP Port</strong>.</li>
+        <li>If using File mode, set Setting 262 destination folder.</li>
+        <li>Run `O9010`, then pull `DPRNT.OUT` and convert it with `scripts/convert_dprnt_to_csv.ps1`.</li>
+      </ol>
+      <pre><code>powershell -ExecutionPolicy Bypass -File .\scripts\convert_dprnt_to_csv.ps1 `
+  -InputPath "DPRNT.OUT" `
+  -OutputPath "slotting_load_log.csv"</code></pre>
+    </section>
+
+    <section class="panel reveal">
+      <h2>Sources</h2>
+      <ul class="sources">
+        <li><a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-4.html" target="_blank" rel="noopener noreferrer">Haas VF-4 specs</a></li>
+        <li><a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-5-40.html" target="_blank" rel="noopener noreferrer">Haas VF-5/40 specs</a></li>
+        <li><a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/large/vf-6-40.html" target="_blank" rel="noopener noreferrer">Haas VF-6/40 specs</a></li>
+        <li><a href="https://www.haascnc.com/reference-container/torque-chart-note.html" target="_blank" rel="noopener noreferrer">Haas torque chart note (load duty behavior)</a></li>
+        <li><a href="https://www.haascnc.com/service/online-operator-s-manuals/mill-operator-s-manual/mill---macros.html" target="_blank" rel="noopener noreferrer">Haas mill macros (#1098 and #3027 definitions)</a></li>
+        <li><a href="https://www.haascnc.com/service/troubleshooting-and-how-to/how-to/communication-with-external-devices---dprnt.html" target="_blank" rel="noopener noreferrer">Haas DPRNT communication guide</a></li>
+        <li><a href="https://www.haascnc.com/service/codes-settings.type%3Dgcode.machine%3Dmill.value%3DG04.html" target="_blank" rel="noopener noreferrer">Haas G04 dwell behavior</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Assumptions are explicit. Verify your exact spindle option on the machine before production decisions.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
