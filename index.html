@@ -783,42 +783,42 @@
 
   <section id="calculator">
     <div class="ctr">
-      <div class="slabel" data-tip="Section 3: figure out how many battery packs you need for your job">03 | Calculator</div>
-      <h2 data-tip="Enter your enhancer motor wattage, machining time, and battery type to get a battery count">How Many Batteries?</h2>
-      <p class="sdesc" data-tip="Cutting power from the table above is only 1-158W, but the actual enhancer motor draws much more due to friction, no-load spin, and drivetrain losses. Examples: SycoTec 4025 DC-T = 250W S1 / 470W max, NSK E3000 = 350W max, NSK iSpeed3 = 140-150W max.">Cutting power is tiny. The real draw is the enhancer motor itself. Enter the motor's rated wattage from its spec sheet.</p>
+      <div class="slabel" data-tip="Section 3: estimate how long the battery will last for your job">03 | Calculator</div>
+      <h2 data-tip="Enter your expected motor draw and machining time to estimate battery life">Battery Runtime Estimator</h2>
+      <p class="sdesc" data-tip="The SycoTec Speeder 60 is rated at 500W max with up to 8 hours claimed runtime. Actual draw depends on tool size, cut depth, and material. The cutting power table above shows the cutter load — add motor overhead for total draw.">Estimate how long a battery charge will last based on your expected motor draw and job length.</p>
 
       <div class="calc-grid">
-        <label data-tip="Total electrical draw of the spindle enhancer motor under load. Check the motor nameplate. Examples: SycoTec 4025 DC-T = 250W continuous (S1), NSK E3000 = 350W, NSK iSpeed3 = 140W.">Enhancer Motor Draw (W)
-          <input id="c-watts" type="number" min="0" step="10" value="250">
+        <label data-tip="Estimated average motor draw during machining. Includes cutting power plus motor overhead (bearings, no-load spin, electronics). Light finishing ~80-150W, medium cuts ~150-250W, aggressive cuts ~250-400W.">Avg Motor Draw (W)
+          <input id="c-watts" type="number" min="0" step="10" value="200">
         </label>
-        <label data-tip="Total time the enhancer will be running during your job. Include both cutting time and any idle spin-up time between cuts.">Machining Time (min)
-          <input id="c-time" type="number" min="0" step="1" value="30">
+        <label data-tip="Total time the enhancer spindle will be running during your job. Include idle spin time between cuts.">Machining Time (min)
+          <input id="c-time" type="number" min="0" step="1" value="60">
         </label>
-        <label data-tip="Select your battery pack. Nominal Wh = actual cell voltage x Ah. DeWalt FLEXVOLT 6Ah = 54V nominal x 2Ah = 108 Wh. The 9Ah pack = 54V x 3Ah = 162 Wh.">Battery Pack
+        <label data-tip="Select your battery. SycoTec Speeder uses a proprietary pack (capacity estimated from 8hr claim). Other packs shown for DIY reference.">Battery Pack
           <select id="c-batt-type">
+            <option value="500">SycoTec Speeder 60 (est. ~500 Wh)</option>
             <option value="108">DeWalt FLEXVOLT 6Ah / DCB606 (108 Wh)</option>
             <option value="162">DeWalt FLEXVOLT 9Ah / DCB609 (162 Wh)</option>
-            <option value="90">Milwaukee M18 5Ah (90 Wh)</option>
             <option value="custom">Custom (enter Wh below)</option>
           </select>
         </label>
-        <label id="custom-wh-label" style="display:none" data-tip="Enter the nominal watt-hours of your battery pack. Nominal Wh = cell voltage x Ah rating.">Custom Nominal Wh
+        <label id="custom-wh-label" style="display:none" data-tip="Enter the nominal watt-hours of your battery pack.">Custom Wh
           <input id="c-custom-wh" type="number" min="1" step="1" value="200">
         </label>
-        <label data-tip="Real-world usable fraction of nominal capacity. Accounts for voltage sag, BMS cutoff, heat loss, and inverter inefficiency. Typically 75-85%.">Usable Fraction (%)
-          <input id="c-eff" type="number" min="50" max="100" step="5" value="80">
+        <label data-tip="Real-world usable fraction of nominal capacity. Accounts for voltage sag, BMS cutoff, and heat. Proprietary packs with good BMS ~85%. Generic packs ~75-80%.">Usable Fraction (%)
+          <input id="c-eff" type="number" min="50" max="100" step="5" value="85">
         </label>
       </div>
 
       <div class="calc-results">
-        <div class="calc-card" data-tip="How long one fully charged battery pack will last. Calculated as: (Nominal Wh x Usable Fraction) / Motor Watts x 60 minutes.">
-          <h4>Runtime per Battery</h4><div class="cv" id="r-runtime">-</div><div class="cu">per pack</div>
+        <div class="calc-card" data-tip="How long one full charge will last at your average motor draw. Calculated as: (Battery Wh x Usable Fraction) / Motor Watts x 60 minutes.">
+          <h4>Battery Life</h4><div class="cv" id="r-runtime">-</div><div class="cu">per charge</div>
         </div>
-        <div class="calc-card" data-tip="Total energy the enhancer will consume over the full machining time. Motor Watts x Time / 60 = Wh consumed.">
+        <div class="calc-card" data-tip="Total energy your job will consume. Motor Watts x Time / 60 = Wh.">
           <h4>Energy Needed</h4><div class="cv" id="r-energy">-</div><div class="cu" id="r-energy-kj">-</div>
         </div>
-        <div class="calc-card" data-tip="Formula: ceil(avg_watts x spindle_on_hours / (battery_Wh x usable_fraction)). Rounded up because you can't use a fraction of a battery.">
-          <h4>Batteries Needed</h4><div class="cv" id="r-count">-</div><div class="cu" id="r-swap">-</div>
+        <div class="calc-card" data-tip="Whether one charge covers your full job, or how many charges/swaps you need.">
+          <h4>Verdict</h4><div class="cv" id="r-count">-</div><div class="cu" id="r-swap">-</div>
         </div>
       </div>
     </div>
@@ -878,7 +878,8 @@
         <a href="https://www.haascnc.com/reference-container/torque-chart-note.html" target="_blank" rel="noopener" data-tip="Haas torque curve documentation — explains how torque, power, and RPM relate across the spindle speed range">Haas Torque Chart Note</a>
         <a href="https://www.haascnc.com/service/online-operator-s-manuals/mill-operator-s-manual/mill---macros.html" target="_blank" rel="noopener" data-tip="Full Haas macro variable reference — includes #1098 (spindle load), #3027 (RPM), #3026 (tool number), and hundreds more">Haas Mill Macro Variables</a>
         <a href="https://www.haascnc.com/service/troubleshooting-and-how-to/how-to/communication-with-external-devices---dprnt.html" target="_blank" rel="noopener" data-tip="Haas DPRNT setup guide — how to configure Settings 261/262 and format DPRNT output statements in G-code">Haas DPRNT Guide</a>
-        <a href="https://www.dewalt.com/systems/cordless-platforms/60v/flexvolt-battery-system" target="_blank" rel="noopener" data-tip="DeWalt FLEXVOLT 60V battery system — 6Ah pack = 360 Wh nominal. Common candidate for portable spindle enhancer power.">DEWALT FLEXVOLT Battery System</a>
+        <a href="https://speeder.sycotec.eu/en/" target="_blank" rel="noopener" data-tip="SycoTec Speeder 60 ER11 — battery-powered spindle enhancer. 500W max, 7k-60k RPM, ER11 collet, 3.4 kg, up to 8hr runtime. From €6,000.">SycoTec Speeder 60 ER11</a>
+        <a href="https://www.dewalt.com/systems/cordless-platforms/60v/flexvolt-battery-system" target="_blank" rel="noopener" data-tip="DeWalt FLEXVOLT 60V battery system — 6Ah DCB606 = 108 Wh nominal (54V x 2Ah).">DEWALT FLEXVOLT Battery System</a>
       </div>
     </div>
   </section>
@@ -914,13 +915,24 @@
         var runtimeMin = usableWh > 0 && watts > 0 ? (usableWh / watts) * 60 : 0;
         var battCount = usableWh > 0 && energyWh > 0 ? Math.ceil(energyWh / usableWh) : 0;
 
-        $("r-runtime").textContent = runtimeMin.toFixed(0) + " min";
+        var hrs = Math.floor(runtimeMin / 60);
+        var mins = Math.round(runtimeMin % 60);
+        var rtText = hrs > 0 ? hrs + "h " + mins + "m" : runtimeMin.toFixed(0) + " min";
+        $("r-runtime").textContent = rtText;
         $("r-energy").textContent = energyWh.toFixed(0) + " Wh";
         $("r-energy-kj").textContent = energyKJ.toFixed(0) + " kJ";
-        $("r-count").textContent = battCount + (battCount === 1 ? " pack" : " packs");
-        $("r-swap").textContent = battCount > 1
-          ? "swap every " + runtimeMin.toFixed(0) + " min"
-          : "no swap needed";
+
+        if (battCount <= 1 && runtimeMin > 0) {
+          var pct = Math.round((energyWh / usableWh) * 100);
+          $("r-count").textContent = "You're covered";
+          $("r-swap").textContent = pct + "% of battery used";
+        } else if (battCount > 1) {
+          $("r-count").textContent = battCount + " charges needed";
+          $("r-swap").textContent = "swap every " + rtText;
+        } else {
+          $("r-count").textContent = "-";
+          $("r-swap").textContent = "";
+        }
       }
 
       ["c-watts", "c-time", "c-custom-wh", "c-eff"].forEach(function (id) {
