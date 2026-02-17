@@ -10,6 +10,34 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
+      --bg: #111318;
+      --bg-card: #1a1d24;
+      --bg-card-alt: #1e2128;
+      --bg-th: #252830;
+      --bg-tr: #1a1d24;
+      --bg-tr-alt: #1e2128;
+      --bdr: #2e3240;
+      --bdr-hi: #3d4254;
+      --c1: #e2e4ea;
+      --c2: #9da2b3;
+      --c3: #6b7086;
+      --amber: #5b8def;
+      --amber-d: #7ba4f7;
+      --amber-g: rgba(91, 141, 239, 0.08);
+      --blue: #5b8def;
+      --green: #34d399;
+      --code: #67e8f9;
+      --code-bg: rgba(255, 255, 255, 0.06);
+      --nav-bg: rgba(17, 19, 24, 0.92);
+      --tip-bg: #0a0c10;
+      --tip-c: #c8ccd6;
+      --tip-label: rgba(200,204,214,0.4);
+      --tag-bdr: rgba(91, 141, 239, 0.25);
+      --mono: "IBM Plex Mono", monospace;
+      --sans: "DM Sans", system-ui, sans-serif;
+    }
+
+    [data-theme="light"] {
       --bg: #f4f5f7;
       --bg-card: #ffffff;
       --bg-card-alt: #f0f1f4;
@@ -26,8 +54,13 @@
       --amber-g: rgba(37, 99, 235, 0.06);
       --blue: #2563eb;
       --green: #15803d;
-      --mono: "IBM Plex Mono", monospace;
-      --sans: "DM Sans", system-ui, sans-serif;
+      --code: #0e7490;
+      --code-bg: rgba(0, 0, 0, 0.05);
+      --nav-bg: rgba(244, 245, 247, 0.92);
+      --tip-bg: #1a1d26;
+      --tip-c: #f4f5f7;
+      --tip-label: rgba(244,245,247,0.45);
+      --tag-bdr: rgba(37, 99, 235, 0.18);
     }
 
     * {
@@ -54,7 +87,7 @@
     header {
       padding: 56px 0 40px;
       border-bottom: 1px solid var(--bdr);
-      background: radial-gradient(circle at 85% -10%, var(--amber-g), transparent 35%);
+      background: radial-gradient(circle at 85% -10%, var(--amber-g), transparent 40%);
     }
 
     .tag {
@@ -65,7 +98,7 @@
       text-transform: uppercase;
       color: var(--amber);
       background: var(--amber-g);
-      border: 1px solid rgba(37, 99, 235, 0.18);
+      border: 1px solid var(--tag-bdr);
       padding: 6px 12px;
       border-radius: 3px;
       margin-bottom: 16px;
@@ -87,7 +120,7 @@
       position: sticky;
       top: 0;
       z-index: 30;
-      background: rgba(244, 245, 247, 0.92);
+      background: var(--nav-bg);
       border-bottom: 1px solid var(--bdr);
       backdrop-filter: blur(8px);
     }
@@ -264,7 +297,7 @@
       margin-top: 14px;
       font-family: var(--mono);
       font-size: 13px;
-      color: #0e7490;
+      color: var(--code);
       line-height: 1.9;
     }
 
@@ -352,8 +385,8 @@
     code {
       font-family: var(--mono);
       font-size: 12px;
-      color: #0e7490;
-      background: rgba(0, 0, 0, 0.05);
+      color: var(--code);
+      background: var(--code-bg);
       padding: 2px 5px;
       border-radius: 3px;
     }
@@ -396,8 +429,8 @@
       top: 12px;
       right: 24px;
       width: 300px;
-      background: var(--c1);
-      color: #f4f5f7;
+      background: var(--tip-bg);
+      color: var(--tip-c);
       font-family: var(--sans);
       font-size: 13px;
       font-weight: 400;
@@ -476,13 +509,41 @@
       white-space: nowrap;
     }
 
+    /* === Theme Toggle === */
+    .theme-toggle {
+      background: none;
+      border: 1px solid var(--bdr);
+      border-radius: 4px;
+      color: var(--c2);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 6px 10px;
+      cursor: pointer;
+      margin-left: auto;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: 0.04em;
+    }
+
+    .theme-toggle:hover {
+      color: var(--c1);
+      border-color: var(--bdr-hi);
+    }
+
+    .theme-toggle .icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
     #tip-box::before {
       content: 'INFO';
       display: block;
       font-family: var(--mono);
       font-size: 9px;
       letter-spacing: 0.12em;
-      color: rgba(244,245,247,0.45);
+      color: var(--tip-label);
       margin-bottom: 6px;
     }
   </style>
@@ -505,6 +566,7 @@
         <a href="#calculator" data-tip="Interactive calculator: enter load % and battery Wh to estimate runtime">Calculator</a>
         <a href="#macro" data-tip="How to capture live spindle data using Haas macro variables and DPRNT">Macro Logging</a>
         <a href="#sources" data-tip="Links to official Haas specs, macro docs, and DeWalt battery info">Sources</a>
+        <button class="theme-toggle" id="theme-toggle" data-tip="Switch between dark and light colour themes"><span class="icon">&#9790;</span> Dark</button>
       </div>
     </div>
   </nav>
@@ -777,7 +839,7 @@
         <label data-tip="The load % shown on the Haas control's spindle bar graph, or read from macro variable #1098. Range: 0-200%.">Spindle Load (%)
           <input id="c-load" type="number" min="0" max="200" step="0.1" value="60">
         </label>
-        <label data-tip="Total time the spindle is under load during your cutting operation, in minutes">Cut Duration (min)
+        <label data-tip="Total time the spindle is under load while machiningting operation, in minutes">Cut Duration (min)
           <input id="c-dur" type="number" min="0" step="0.1" value="10">
         </label>
         <label data-tip="Rated capacity of your battery pack in watt-hours. Example: DeWalt FLEXVOLT 6Ah 60V = 360 Wh nominal, ~240 Wh usable.">Battery Capacity (Wh)
@@ -818,7 +880,34 @@
         <li data-tip="PowerShell script that strips DPRNT formatting, trims whitespace from fields, removes LOG_COMPLETE marker, and writes a clean CSV file.">Convert to CSV with <code data-tip="PowerShell script included in this repo. Usage: -InputPath 'DPRNT.OUT' -OutputPath 'log.csv'. Requires -ExecutionPolicy Bypass.">scripts/convert_dprnt_to_csv.ps1</code>.</li>
       </ul>
 
-      <div class="fm" data-tip="Copy-paste this command into PowerShell to convert your DPRNT output to a clean CSV file. The -ExecutionPolicy Bypass flag is needed because Windows blocks unsigned scripts by default.">
+      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px" data-tip="The three-step pipeline: Haas control collects data → file transfer → Windows PC processes it. The Haas control cannot run PowerShell.">Data Pipeline: Haas → USB → PC</h3>
+
+      <div class="sg" style="grid-template-columns:repeat(3, 1fr)">
+        <div class="sc" data-tip="Step 1 runs entirely on the Haas CNC control. The macro reads spindle load (#1098) and RPM (#3027) in a loop, then DPRNT writes each sample as a text line to DPRNT.OUT. Enable Setting 261 (output mode: FILE) and Setting 262 (destination path).">
+          <div class="sv" style="font-size:16px;color:var(--amber)">1. Haas Control</div>
+          <div class="sl" style="margin:8px 0 6px">ON THE MACHINE</div>
+          <p style="font-size:13px;color:var(--c2);line-height:1.5">Run <code>O9010.NC</code> macro while machining. It reads <code>#1098</code> (load %) and <code>#3027</code> (RPM) every second and writes CSV lines via <code>DPRNT[]</code> to the control's memory.</p>
+          <p style="font-size:12px;color:var(--c3);margin-top:8px">Requires: Setting 261 = FILE, Setting 262 = path</p>
+        </div>
+        <div class="sc" data-tip="Step 2 is a simple file transfer. The Haas control stores DPRNT.OUT in its memory or on a connected USB drive. Copy the file to any Windows PC. Methods: USB stick (most common), Haas Net Share (ethernet), or serial/TCP port if configured in Setting 262.">
+          <div class="sv" style="font-size:16px;color:var(--amber)">2. Transfer File</div>
+          <div class="sl" style="margin:8px 0 6px">USB / NETWORK / TCP</div>
+          <p style="font-size:13px;color:var(--c2);line-height:1.5">Copy <code>DPRNT.OUT</code> from the Haas control to a Windows PC. Use a USB stick, network share (Net Share / WIPS option), or serial/TCP connection.</p>
+          <p style="font-size:12px;color:var(--c3);margin-top:8px">Raw text file — not yet a clean CSV</p>
+        </div>
+        <div class="sc" data-tip="Step 3 runs on a Windows PC only. PowerShell is a Windows scripting language — the Haas control runs a proprietary real-time OS and cannot execute PowerShell, Python, or any external scripts. The script strips DPRNT formatting artifacts and outputs a clean CSV.">
+          <div class="sv" style="font-size:16px;color:var(--amber)">3. Windows PC</div>
+          <div class="sl" style="margin:8px 0 6px">POWERSHELL SCRIPT</div>
+          <p style="font-size:13px;color:var(--c2);line-height:1.5">Run <code>convert_dprnt_to_csv.ps1</code> to parse the raw DPRNT output into a clean CSV with columns for timestamp, load %, RPM, and cumulative energy.</p>
+          <p style="font-size:12px;color:var(--c3);margin-top:8px">Haas cannot run PowerShell — PC only</p>
+        </div>
+      </div>
+
+      <div class="co" data-tip="Important clarification: the PowerShell script is NOT meant to run on the Haas machine. The Haas control only runs G-code. Data collection happens on the machine, data processing happens on your PC.">
+        <b>Note:</b> The Haas control runs a proprietary real-time OS — it can only execute G-code and macros. The macro does the data <b>collection</b>, the PowerShell script does the data <b>processing</b> on a separate Windows PC.
+      </div>
+
+      <div class="fm" data-tip="Copy-paste this command into PowerShell on your Windows PC to convert your DPRNT output to a clean CSV file. The -ExecutionPolicy Bypass flag is needed because Windows blocks unsigned scripts by default.">
         powershell -ExecutionPolicy Bypass -File .\scripts\convert_dprnt_to_csv.ps1 -InputPath "DPRNT.OUT" -OutputPath "slotting_load_log.csv"
       </div>
     </div>
@@ -898,6 +987,29 @@
         var el = e.target.closest('[data-tip]');
         if (el) {
           box.classList.remove('visible');
+        }
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      var root = document.documentElement;
+      var saved = localStorage.getItem('theme');
+      if (saved === 'light') {
+        root.setAttribute('data-theme', 'light');
+        btn.innerHTML = '<span class="icon">&#9728;</span> Light';
+      }
+      btn.addEventListener('click', function () {
+        var isLight = root.getAttribute('data-theme') === 'light';
+        if (isLight) {
+          root.removeAttribute('data-theme');
+          btn.innerHTML = '<span class="icon">&#9790;</span> Dark';
+          localStorage.setItem('theme', 'dark');
+        } else {
+          root.setAttribute('data-theme', 'light');
+          btn.innerHTML = '<span class="icon">&#9728;</span> Light';
+          localStorage.setItem('theme', 'light');
         }
       });
     })();
