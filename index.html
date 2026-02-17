@@ -602,8 +602,54 @@
         </div>
       </div>
 
-      <div class="co" data-tip="Cutting power from the table below is only 1-158W. The total motor draw is much higher because the motor also has to overcome bearing friction, windage, and electronics overhead even when not cutting.">
-        <b>Why so much range?</b> Cutting power is only 1–158W (see table below), but total motor draw includes bearing friction, electronics, and no-load spin. Actual battery life depends on how hard you push the cut.
+      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px" data-tip="Breakdown of how these estimates were calculated">How We Got These Numbers</h3>
+
+      <div class="tw">
+        <table>
+          <thead>
+            <tr>
+              <th data-tip="What the estimate covers">Scenario</th>
+              <th data-tip="Cutting power from the 6061 quick table below, at 30k RPM">Cutting Power</th>
+              <th data-tip="Motor overhead: bearing friction, no-load spin, electronics, controller. Estimated 50-100W for compact high-speed spindles.">Motor Overhead</th>
+              <th data-tip="Cutting power + motor overhead = total electrical draw from the battery">Total Draw</th>
+              <th data-tip="SycoTec claims up to 8 hours. Estimated ~500 Wh usable capacity. Battery life = 500 Wh / total draw.">Est. Battery Life</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="hi">Light finishing (1 mm tool, 30k)</td>
+              <td data-tip="From table: 1mm at 30k RPM = 1.5-4.8W cutting power">~5W</td>
+              <td data-tip="No-load spin + bearings + electronics at 30k RPM">~60-80W</td>
+              <td data-tip="5W cutting + 75W overhead">~80W</td>
+              <td style="color:var(--green)" data-tip="500 Wh / 80W = 6.25 hrs">~6 hrs</td>
+            </tr>
+            <tr>
+              <td class="hi">Medium cuts (2 mm tool, 30k)</td>
+              <td data-tip="From table: 2mm at 30k RPM = 11-39W cutting power">~25W</td>
+              <td data-tip="Higher load increases motor losses slightly">~75-100W</td>
+              <td data-tip="25W cutting + 100W overhead">~125W</td>
+              <td style="color:var(--green)" data-tip="500 Wh / 125W = 4 hrs">~4 hrs</td>
+            </tr>
+            <tr>
+              <td class="hi">Heavy cuts (2.5 mm tool, 30k)</td>
+              <td data-tip="From table: 2.5mm at 30k RPM = 22-79W cutting power">~50W</td>
+              <td data-tip="Motor working harder, higher thermal losses">~100-150W</td>
+              <td data-tip="50W cutting + 150W overhead">~200W</td>
+              <td style="color:var(--amber)" data-tip="500 Wh / 200W = 2.5 hrs">~2.5 hrs</td>
+            </tr>
+            <tr>
+              <td class="hi">Max load (2.5 mm tool, 60k)</td>
+              <td data-tip="From table: 2.5mm at 60k RPM = 44-158W cutting power">~100W</td>
+              <td data-tip="Near max RPM, significant bearing and windage losses">~150-200W</td>
+              <td data-tip="100W cutting + 200W overhead — approaching 500W motor limit">~300W</td>
+              <td style="color:var(--c2)" data-tip="500 Wh / 300W = 1.7 hrs">~1.7 hrs</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="co" data-tip="Key assumptions listed for transparency">
+        <b>Assumptions:</b> SycoTec Speeder 60 battery ~500 Wh usable (estimated from 8hr claim at low load). Motor overhead 60-200W depending on RPM and load (typical for compact high-speed spindles). Cutting power from 6061-T6 table below at aggressive feed rates.
       </div>
     </div>
   </section>
