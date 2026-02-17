@@ -783,43 +783,42 @@
 
   <section id="calculator">
     <div class="ctr">
-      <div class="slabel" data-tip="Section 3: interactive calculator — change any input and results update instantly">03 | Calculator</div>
-      <h2 data-tip="Enter your observed spindle load and battery specs to estimate how long the battery will last">Load to kJ to Runtime</h2>
-      <p class="sdesc" data-tip="Read the load % from the Haas control bar graph or capture it with macro #1098">Use observed load from the machine and your battery capacity to estimate runtime.</p>
+      <div class="slabel" data-tip="Section 3: figure out how many battery packs you need for your job">03 | Calculator</div>
+      <h2 data-tip="Enter your enhancer motor wattage, machining time, and battery type to get a battery count">How Many Batteries?</h2>
+      <p class="sdesc" data-tip="Cutting power from the table above is only 1-158W, but the actual enhancer motor draws much more due to friction, no-load spin, and drivetrain losses. Examples: SycoTec 4025 DC-T = 250W S1 / 470W max, NSK E3000 = 350W max, NSK iSpeed3 = 140-150W max.">Cutting power is tiny. The real draw is the enhancer motor itself. Enter the motor's rated wattage from its spec sheet.</p>
 
       <div class="calc-grid">
-        <label data-tip="Select your machine model to set the continuous power baseline (11.2 kW for 30hp, 7.5 kW for 20hp)">Machine
-          <select id="c-machine">
-            <option value="11.2">VF-4 / VF-5 / VF-6 (30 hp, 11.2 kW continuous)</option>
-            <option value="7.5">VF-4 legacy (20 hp, 7.5 kW continuous)</option>
+        <label data-tip="Total electrical draw of the spindle enhancer motor under load. Check the motor nameplate. Examples: SycoTec 4025 DC-T = 250W continuous (S1), NSK E3000 = 350W, NSK iSpeed3 = 140W.">Enhancer Motor Draw (W)
+          <input id="c-watts" type="number" min="0" step="10" value="250">
+        </label>
+        <label data-tip="Total time the enhancer will be running during your job. Include both cutting time and any idle spin-up time between cuts.">Machining Time (min)
+          <input id="c-time" type="number" min="0" step="1" value="30">
+        </label>
+        <label data-tip="Select your battery pack. Nominal Wh = actual cell voltage x Ah. DeWalt FLEXVOLT 6Ah = 54V nominal x 2Ah = 108 Wh. The 9Ah pack = 54V x 3Ah = 162 Wh.">Battery Pack
+          <select id="c-batt-type">
+            <option value="108">DeWalt FLEXVOLT 6Ah / DCB606 (108 Wh)</option>
+            <option value="162">DeWalt FLEXVOLT 9Ah / DCB609 (162 Wh)</option>
+            <option value="90">Milwaukee M18 5Ah (90 Wh)</option>
+            <option value="custom">Custom (enter Wh below)</option>
           </select>
         </label>
-        <label data-tip="The load % shown on the Haas control's spindle bar graph, or read from macro variable #1098. Range: 0-200%.">Spindle Load (%)
-          <input id="c-load" type="number" min="0" max="200" step="0.1" value="60">
+        <label id="custom-wh-label" style="display:none" data-tip="Enter the nominal watt-hours of your battery pack. Nominal Wh = cell voltage x Ah rating.">Custom Nominal Wh
+          <input id="c-custom-wh" type="number" min="1" step="1" value="200">
         </label>
-        <label data-tip="Total time the spindle is under load while machining, in minutes">Cut Duration (min)
-          <input id="c-dur" type="number" min="0" step="0.1" value="10">
-        </label>
-        <label data-tip="Rated capacity of your battery pack in watt-hours. Example: DeWalt FLEXVOLT 6Ah 60V = 360 Wh nominal, ~240 Wh usable.">Battery Capacity (Wh)
-          <input id="c-batt" type="number" min="0" step="1" value="240">
-        </label>
-        <label data-tip="Real-world efficiency factor (typically 75-85%). Accounts for heat loss, inverter inefficiency, and drivetrain friction.">Efficiency (%)
-          <input id="c-eff" type="number" min="1" max="100" step="1" value="80">
+        <label data-tip="Real-world usable fraction of nominal capacity. Accounts for voltage sag, BMS cutoff, heat loss, and inverter inefficiency. Typically 75-85%.">Usable Fraction (%)
+          <input id="c-eff" type="number" min="50" max="100" step="5" value="80">
         </label>
       </div>
 
       <div class="calc-results">
-        <div class="calc-card" data-tip="Spindle power draw = Load% / 100 x continuous kW rating. This is the electrical power the spindle motor consumes.">
-          <h4>Power Draw</h4><div class="cv" id="r-power">-</div><div class="cu" id="r-power-hp">-</div>
+        <div class="calc-card" data-tip="How long one fully charged battery pack will last. Calculated as: (Nominal Wh x Usable Fraction) / Motor Watts x 60 minutes.">
+          <h4>Runtime per Battery</h4><div class="cv" id="r-runtime">-</div><div class="cu">per pack</div>
         </div>
-        <div class="calc-card" data-tip="How fast energy is consumed: Power (kW) x 60 = kJ per minute. Higher load = faster energy drain.">
-          <h4>Energy Rate</h4><div class="cv" id="r-rate">-</div><div class="cu">per minute</div>
+        <div class="calc-card" data-tip="Total energy the enhancer will consume over the full machining time. Motor Watts x Time / 60 = Wh consumed.">
+          <h4>Energy Needed</h4><div class="cv" id="r-energy">-</div><div class="cu" id="r-energy-kj">-</div>
         </div>
-        <div class="calc-card" data-tip="Total energy consumed over the full cut duration: Power x Time. Shown in kJ and converted to Wh for battery comparison.">
-          <h4>Total Energy</h4><div class="cv" id="r-total">-</div><div class="cu" id="r-total-wh">-</div>
-        </div>
-        <div class="calc-card" data-tip="How long the battery can power the spindle at this load level. Calculated as: (Battery Wh x 3.6 x Efficiency) / Power kW / 60.">
-          <h4>Battery Runtime</h4><div class="cv" id="r-runtime">-</div><div class="cu">at this load</div>
+        <div class="calc-card" data-tip="Formula: ceil(avg_watts x spindle_on_hours / (battery_Wh x usable_fraction)). Rounded up because you can't use a fraction of a battery.">
+          <h4>Batteries Needed</h4><div class="cv" id="r-count">-</div><div class="cu" id="r-swap">-</div>
         </div>
       </div>
     </div>
@@ -893,32 +892,38 @@
     (function () {
       const $ = (id) => document.getElementById(id);
 
+      var battSelect = $("c-batt-type");
+      var customLabel = $("custom-wh-label");
+
+      battSelect.addEventListener("change", function () {
+        customLabel.style.display = battSelect.value === "custom" ? "" : "none";
+        calc();
+      });
+
       function calc() {
-        const contKW = parseFloat($("c-machine").value);
-        const load = parseFloat($("c-load").value) || 0;
-        const dur = parseFloat($("c-dur").value) || 0;
-        const battWh = parseFloat($("c-batt").value) || 0;
-        const eff = (parseFloat($("c-eff").value) || 80) / 100;
+        var watts = parseFloat($("c-watts").value) || 0;
+        var time = parseFloat($("c-time").value) || 0;
+        var nominalWh = battSelect.value === "custom"
+          ? (parseFloat($("c-custom-wh").value) || 0)
+          : parseFloat(battSelect.value);
+        var eff = (parseFloat($("c-eff").value) || 80) / 100;
 
-        const powerKW = (load / 100) * contKW;
-        const powerHP = powerKW / 0.7457;
-        const rateKJ = powerKW * 60;
-        const totalKJ = powerKW * dur * 60;
-        const totalWh = totalKJ / 3.6;
+        var usableWh = nominalWh * eff;
+        var energyWh = watts * time / 60;
+        var energyKJ = energyWh * 3.6;
+        var runtimeMin = usableWh > 0 && watts > 0 ? (usableWh / watts) * 60 : 0;
+        var battCount = usableWh > 0 && energyWh > 0 ? Math.ceil(energyWh / usableWh) : 0;
 
-        const usableKJ = battWh * 3.6 * eff;
-        const runtimeS = powerKW > 0 ? usableKJ / powerKW : 0;
-        const runtimeM = runtimeS / 60;
-
-        $("r-power").textContent = powerKW.toFixed(2) + " kW";
-        $("r-power-hp").textContent = powerHP.toFixed(1) + " hp";
-        $("r-rate").textContent = rateKJ.toFixed(1) + " kJ/min";
-        $("r-total").textContent = totalKJ.toFixed(0) + " kJ";
-        $("r-total-wh").textContent = totalWh.toFixed(0) + " Wh";
-        $("r-runtime").textContent = runtimeM.toFixed(1) + " min";
+        $("r-runtime").textContent = runtimeMin.toFixed(0) + " min";
+        $("r-energy").textContent = energyWh.toFixed(0) + " Wh";
+        $("r-energy-kj").textContent = energyKJ.toFixed(0) + " kJ";
+        $("r-count").textContent = battCount + (battCount === 1 ? " pack" : " packs");
+        $("r-swap").textContent = battCount > 1
+          ? "swap every " + runtimeMin.toFixed(0) + " min"
+          : "no swap needed";
       }
 
-      ["c-machine", "c-load", "c-dur", "c-batt", "c-eff"].forEach((id) => {
+      ["c-watts", "c-time", "c-custom-wh", "c-eff"].forEach(function (id) {
         $(id).addEventListener("input", calc);
       });
 
