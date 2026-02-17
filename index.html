@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spindle Enhancer Quick Estimator | Haas VF-4/5/6</title>
-  <meta name="description" content="Lean load to kJ and battery runtime estimator for Haas VF-4, VF-5/40, VF-6/40 with 12k spindle option assumptions and macro logging workflow.">
+  <title>SycoTec Speeder 60 Battery Estimator | Haas VF-4/5/6</title>
+  <meta name="description" content="Battery life estimates for the SycoTec Speeder 60 ER11 on Haas VF-4, VF-5/40, VF-6/40 with cutting power tables and runtime calculator.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -419,35 +419,6 @@
       text-align: center;
     }
 
-    /* === Tooltip System === */
-    [data-tip] {
-      cursor: help;
-    }
-
-    #tip-box {
-      position: fixed;
-      top: 12px;
-      right: 24px;
-      width: 300px;
-      background: var(--tip-bg);
-      color: var(--tip-c);
-      font-family: var(--sans);
-      font-size: 13px;
-      font-weight: 400;
-      line-height: 1.55;
-      padding: 14px 16px;
-      border-radius: 8px;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.18s ease;
-      z-index: 200;
-      box-shadow: 0 6px 24px rgba(0,0,0,0.18);
-    }
-
-    #tip-box.visible {
-      opacity: 1;
-    }
-
     /* === RPM Bar Chart === */
     .rpm-chart {
       margin: 20px 0 28px;
@@ -539,27 +510,34 @@
     /* === Cutting table RPM group colours === */
     .cutting-tbl td:nth-child(2),
     .cutting-tbl td:nth-child(3) { color: var(--c2); }
-    .cutting-tbl td:nth-child(5),
-    .cutting-tbl td:nth-child(6) { color: var(--green); }
-    .cutting-tbl td:nth-child(8),
-    .cutting-tbl td:nth-child(9) { color: var(--amber); }
+    .cutting-tbl td:nth-child(4),
+    .cutting-tbl td:nth-child(5) { color: var(--green); }
+    .cutting-tbl td:nth-child(6),
+    .cutting-tbl td:nth-child(7) { color: var(--amber); }
 
-    #tip-box::before {
-      content: 'INFO';
-      display: block;
+    /* === Justification table inputs === */
+    .est-rpm {
+      width: 70px;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--bdr);
+      border-radius: 3px;
+      color: var(--c1);
       font-family: var(--mono);
-      font-size: 9px;
-      letter-spacing: 0.12em;
-      color: var(--tip-label);
-      margin-bottom: 6px;
+      font-size: 12px;
+      padding: 4px 6px;
+      text-align: right;
+    }
+    .est-rpm:focus {
+      border-color: var(--amber);
+      outline: none;
     }
   </style>
 </head>
 <body>
   <header>
     <div class="ctr">
-      <h1 data-tip="Battery life estimates for the SycoTec Speeder 60 ER11 on Haas vertical mills">SycoTec Speeder 60 Battery Estimator</h1>
-      <p class="sub" data-tip="These three machines share the same 30hp vector-drive spindle platform from Haas">
+      <h1>SycoTec Speeder 60 Battery Estimator</h1>
+      <p class="sub">
         Haas VF-4 / VF-5/40 / VF-6/40 with 12k spindle option.
       </p>
     </div>
@@ -568,21 +546,19 @@
   <nav>
     <div class="ctr">
       <div class="nav-inner">
-        <a href="#specs" data-tip="Machine power specs and load meter reference table">Specs</a>
-        <a href="#slotting" data-tip="Cutting power estimates for 1mm-2.5mm endmills in 6061-T6 aluminium">6061 Quick Table</a>
-        <a href="#calculator" data-tip="Interactive calculator: enter load % and battery Wh to estimate runtime">Calculator</a>
-        <a href="#macro" data-tip="How to capture live spindle data using Haas macro variables and DPRNT">Macro Logging</a>
-        <a href="#sources" data-tip="Links to official Haas specs, macro docs, and SycoTec Speeder info">Sources</a>
-        <button class="theme-toggle" id="theme-toggle" data-tip="Switch between dark and light colour themes"><span class="icon">&#9790;</span> Dark</button>
+        <a href="#slotting">6061 Quick Table</a>
+        <a href="#calculator">Calculator</a>
+        <a href="#sources">Sources</a>
+        <button class="theme-toggle" id="theme-toggle"><span class="icon">&#9790;</span> Dark</button>
       </div>
     </div>
   </nav>
 
   <section id="tldr">
     <div class="ctr">
-      <div class="slabel" data-tip="Quick answer based on SycoTec Speeder 60 ER11 specs: 500W max motor, proprietary battery, up to 8hr claimed runtime">The Short Answer</div>
-      <h2 data-tip="Estimated battery life for the SycoTec Speeder 60 with 1-2.5mm endmills in 6061 aluminium">How Long Will the Battery Last?</h2>
-      <p class="sdesc" data-tip="Based on SycoTec Speeder 60 ER11 (500W max, 7k-60k RPM, ER11 collet). Cutting power for small tools is tiny — most of the draw is motor overhead.">SycoTec Speeder 60 ER11 with small endmills in 6061-T6 aluminium.</p>
+      <div class="slabel">The Short Answer</div>
+      <h2>How Long Will the Battery Last?</h2>
+      <p class="sdesc">SycoTec Speeder 60 ER11 with small endmills in 6061-T6 aluminium.</p>
 
       <div class="sg" style="grid-template-columns:repeat(3, 1fr)">
         <div class="sc">
@@ -602,177 +578,118 @@
         </div>
       </div>
 
-      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px" data-tip="Breakdown of how these estimates were calculated">How We Got These Numbers</h3>
+      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px">How We Got These Numbers</h3>
+      <p class="sdesc">Adjust the RPM to see how spindle speed affects cutting power, motor draw, and battery life.</p>
 
       <div class="tw">
-        <table>
+        <table id="est-table">
           <thead>
             <tr>
-              <th data-tip="What the estimate covers">Scenario</th>
-              <th data-tip="Cutting power from the 6061 quick table below, at 30k RPM">Cutting Power</th>
-              <th data-tip="Motor overhead: bearing friction, no-load spin, electronics, controller. Estimated 50-100W for compact high-speed spindles.">Motor Overhead</th>
-              <th data-tip="Cutting power + motor overhead = total electrical draw from the battery">Total Draw</th>
-              <th data-tip="SycoTec claims up to 8 hours. Estimated ~500 Wh usable capacity. Battery life = 500 Wh / total draw.">Est. Battery Life</th>
+              <th>Tool</th>
+              <th>RPM</th>
+              <th>Cutting Power</th>
+              <th>Motor Overhead</th>
+              <th>Total Draw</th>
+              <th>Battery Life</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="hi">Light finishing (1 mm tool, 30k)</td>
-              <td data-tip="From table: 1mm at 30k RPM = 1.5-4.8W cutting power">~5W</td>
-              <td data-tip="No-load spin + bearings + electronics at 30k RPM">~60-80W</td>
-              <td data-tip="5W cutting + 75W overhead">~80W</td>
-              <td style="color:var(--green)" data-tip="500 Wh / 80W = 6.25 hrs">~6 hrs</td>
+              <td class="hi">1.0 mm</td>
+              <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="1.0"></td>
+              <td class="est-cut">-</td>
+              <td class="est-oh">-</td>
+              <td class="est-total">-</td>
+              <td class="est-life">-</td>
             </tr>
             <tr>
-              <td class="hi">Medium cuts (2 mm tool, 30k)</td>
-              <td data-tip="From table: 2mm at 30k RPM = 11-39W cutting power">~25W</td>
-              <td data-tip="Higher load increases motor losses slightly">~75-100W</td>
-              <td data-tip="25W cutting + 100W overhead">~125W</td>
-              <td style="color:var(--green)" data-tip="500 Wh / 125W = 4 hrs">~4 hrs</td>
+              <td class="hi">1.5 mm</td>
+              <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="1.5"></td>
+              <td class="est-cut">-</td>
+              <td class="est-oh">-</td>
+              <td class="est-total">-</td>
+              <td class="est-life">-</td>
             </tr>
             <tr>
-              <td class="hi">Heavy cuts (2.5 mm tool, 30k)</td>
-              <td data-tip="From table: 2.5mm at 30k RPM = 22-79W cutting power">~50W</td>
-              <td data-tip="Motor working harder, higher thermal losses">~100-150W</td>
-              <td data-tip="50W cutting + 150W overhead">~200W</td>
-              <td style="color:var(--amber)" data-tip="500 Wh / 200W = 2.5 hrs">~2.5 hrs</td>
+              <td class="hi">2.0 mm</td>
+              <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="2.0"></td>
+              <td class="est-cut">-</td>
+              <td class="est-oh">-</td>
+              <td class="est-total">-</td>
+              <td class="est-life">-</td>
             </tr>
             <tr>
-              <td class="hi">Max load (2.5 mm tool, 60k)</td>
-              <td data-tip="From table: 2.5mm at 60k RPM = 44-158W cutting power">~100W</td>
-              <td data-tip="Near max RPM, significant bearing and windage losses">~150-200W</td>
-              <td data-tip="100W cutting + 200W overhead — approaching 500W motor limit">~300W</td>
-              <td style="color:var(--c2)" data-tip="500 Wh / 300W = 1.7 hrs">~1.7 hrs</td>
+              <td class="hi">2.5 mm</td>
+              <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="2.5"></td>
+              <td class="est-cut">-</td>
+              <td class="est-oh">-</td>
+              <td class="est-total">-</td>
+              <td class="est-life">-</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="co" data-tip="Key assumptions listed for transparency">
-        <b>Assumptions:</b> SycoTec Speeder 60 battery ~500 Wh usable (estimated from 8hr claim at low load). Motor overhead 60-200W depending on RPM and load (typical for compact high-speed spindles). Cutting power from 6061-T6 table below at aggressive feed rates.
+      <div class="co">
+        <b>Assumptions:</b> Battery ~500 Wh × 85% usable = 425 Wh. Cutting power scales linearly with RPM from 12k baseline (6061-T6, full slotting, mid-range feed). Motor overhead modelled as 40W base + 1.5W per 1000 RPM + 50% of cutting power.
       </div>
     </div>
   </section>
 
-  <section id="specs">
-    <div class="ctr">
-      <div class="slabel" data-tip="Section 1: baseline power numbers that all calculations are derived from">01 | Machine Baseline</div>
-      <h2 data-tip="All three machines use the same 30hp spindle motor platform — same load math applies to all">Haas VF-4 / VF-5/40 / VF-6/40</h2>
-      <p class="sdesc" data-tip="The 100% load mark on the Haas control corresponds to the continuous kW rating, not peak">Power baseline for load to energy conversion. Max RPM shown as your 12k installed spindle setup.</p>
-
-      <div class="sg">
-        <div class="sc" data-tip="Peak spindle motor rating. Only available for short bursts (3 min at 200% load). Equals 22.4 kW.">
-          <div class="sv">30 <small>hp</small></div>
-          <div class="sl">Max Rating</div>
-          <div class="ss">22.4 kW peak</div>
-        </div>
-        <div class="sc" data-tip="Continuous (S1 duty) spindle rating. The load meter bar reads 100% at exactly this value. Can run indefinitely.">
-          <div class="sv">11.2 <small>kW</small></div>
-          <div class="sl">Continuous Power</div>
-          <div class="ss">Used for 100% load math</div>
-        </div>
-        <div class="sc" data-tip="Maximum spindle speed with the optional 12,000 RPM spindle cartridge installed. Standard is 8,100 RPM.">
-          <div class="sv">12,000 <small>rpm</small></div>
-          <div class="sl">Max RPM in Your Setup</div>
-          <div class="ss">12k spindle option installed</div>
-        </div>
-      </div>
-
-      <div class="tw">
-        <table>
-          <thead>
-            <tr>
-              <th data-tip="Percentage shown on the Haas control's spindle load bar graph. Read via macro variable #1098.">Load Meter</th>
-              <th data-tip="Electrical power draw at the spindle motor, calculated as Load% / 100 x 11.2 kW">Power</th>
-              <th data-tip="How long the spindle can sustain this load level before thermal protection kicks in">Duty</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="hi" data-tip="Half of continuous rating — very light machining, typical for small tools at high RPM">50%</td>
-              <td data-tip="5.6 kW = 7.5 hp — well within continuous capability">5.6 kW</td>
-              <td data-tip="Can run at this load indefinitely without overheating">Continuous</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="Full continuous rating — the spindle can sustain this load indefinitely">100%</td>
-              <td data-tip="11.2 kW = 15 hp — full continuous power">11.2 kW</td>
-              <td data-tip="S1 duty rating: no time limit at this load">Continuous</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="50% above continuous — entering overload territory, motor generates excess heat">150%</td>
-              <td data-tip="16.8 kW = 22.5 hp — overload region">16.8 kW</td>
-              <td data-tip="Thermal limit: spindle will overheat if sustained beyond ~10 minutes">10 min max</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="Full peak power — absolute maximum, triggers alarm if sustained too long">200%</td>
-              <td data-tip="22.4 kW = 30 hp — peak motor capability">22.4 kW</td>
-              <td data-tip="Very short duty: alarm will trigger beyond ~3 minutes at full peak">3 min max</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="fm" data-tip="Core formulas used throughout this page. Power is proportional to load %. Energy = power x time. 1 Wh = 3.6 kJ for battery conversion.">
-        Power (kW) = (Load% / 100) x 11.2<br>
-        Energy (kJ) = Power (kW) x Time (s)<br>
-        1 Wh = 3.6 kJ
-      </div>
-    </div>
-  </section>
 
   <section id="slotting">
     <div class="ctr">
-      <div class="slabel" data-tip="Section 2: theoretical cutting power for micro endmills in aluminium">02 | 6061 Quick Table</div>
-      <h2 data-tip="Covers 1.0, 1.5, 2.0, and 2.5 mm diameter endmills running at maximum 12k RPM">1.0 to 2.5 mm Endmills at 12,000 RPM</h2>
-      <p class="sdesc" data-tip="'Cutting power' is only the energy consumed by chip removal. Real spindle electrical draw is much higher because of bearing friction, drivetrain losses, and no-load motor power.">
+      <div class="slabel">01 | 6061 Quick Table</div>
+      <h2>1.0 to 2.5 mm Endmills at 12,000 RPM</h2>
+      <p class="sdesc">
         Cutting-only estimate for full-width slotting with 1mm–2.5mm end mills. Real spindle electrical draw is higher because no-load and drivetrain losses dominate.
       </p>
 
-      <h3 style="font-family:var(--mono);font-size:16px;margin-top:24px;margin-bottom:6px" data-tip="Shows why a spindle enhancer is needed: even at 12,000 RPM these tools run far below their ideal surface speed">Recommended RPM vs Haas 12,000</h3>
-      <p class="sdesc" data-tip="Ideal RPM calculated at Vc = 250 m/min (standard for carbide in 6061-T6). Formula: RPM = Vc × 1000 / (π × D). Even at 12k RPM the surface speed is too low for proper chip formation.">Micro endmills need 30,000–80,000 RPM for proper surface speed in aluminium. At 12,000 RPM these tools run at 15–38% of optimal — still rubbing, not cutting.</p>
+      <h3 style="font-family:var(--mono);font-size:16px;margin-top:24px;margin-bottom:6px">Recommended RPM vs Haas 12,000</h3>
+      <p class="sdesc">Micro endmills need 30,000–80,000 RPM for proper surface speed in aluminium. At 12,000 RPM these tools run at 15–38% of optimal — still rubbing, not cutting.</p>
 
-      <div class="rpm-chart" data-tip="Bar chart comparing ideal RPM (green, at Vc = 250 m/min) vs the Haas 12,000 RPM option spindle (red). The red bar shows what % of ideal surface speed you actually achieve.">
+      <div class="rpm-chart">
         <div class="rpm-row">
           <div class="rpm-row-label">1.0 <small style="color:var(--c3);font-weight:500">mm</small></div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar ideal" style="width:100%" data-tip="Ideal RPM for 1.0mm at Vc=250 m/min. Formula: 250×1000/(π×1.0) = 79,577">79,577 ideal</div>
+            <div class="rpm-bar ideal" style="width:100%">79,577 ideal</div>
           </div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar actual" style="width:15.1%" data-tip="12,000 RPM is only 15.1% of ideal for a 1.0mm endmill. Surface speed = 37.7 m/min vs 250 m/min target.">12,000</div>
-            <span class="rpm-vc" data-tip="Only 15% of the recommended cutting speed — severe rubbing, poor chip formation, rapid built-up edge">15% Vc</span>
+            <div class="rpm-bar actual" style="width:15.1%">12,000</div>
+            <span class="rpm-vc">15% Vc</span>
           </div>
         </div>
 
         <div class="rpm-row">
           <div class="rpm-row-label">1.5 <small style="color:var(--c3);font-weight:500">mm</small></div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar ideal" style="width:66.7%" data-tip="Ideal RPM for 1.5mm at Vc=250 m/min = 53,052">53,052 ideal</div>
+            <div class="rpm-bar ideal" style="width:66.7%">53,052 ideal</div>
           </div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar actual" style="width:15.1%" data-tip="12,000 RPM is only 22.6% of ideal for 1.5mm. Surface speed = 56.5 m/min vs 250 m/min target.">12,000</div>
-            <span class="rpm-vc" data-tip="23% of recommended surface speed — still heavily rubbing">23% Vc</span>
+            <div class="rpm-bar actual" style="width:15.1%">12,000</div>
+            <span class="rpm-vc">23% Vc</span>
           </div>
         </div>
 
         <div class="rpm-row">
           <div class="rpm-row-label">2.0 <small style="color:var(--c3);font-weight:500">mm</small></div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar ideal" style="width:50%" data-tip="Ideal RPM for 2.0mm at Vc=250 m/min = 39,789">39,789 ideal</div>
+            <div class="rpm-bar ideal" style="width:50%">39,789 ideal</div>
           </div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar actual" style="width:15.1%" data-tip="12,000 RPM is only 30.2% of ideal for 2.0mm. Surface speed = 75.4 m/min vs 250 m/min target.">12,000</div>
-            <span class="rpm-vc" data-tip="30% of recommended — poor chip evacuation and surface finish">30% Vc</span>
+            <div class="rpm-bar actual" style="width:15.1%">12,000</div>
+            <span class="rpm-vc">30% Vc</span>
           </div>
         </div>
 
         <div class="rpm-row">
           <div class="rpm-row-label">2.5 <small style="color:var(--c3);font-weight:500">mm</small></div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar ideal" style="width:40%" data-tip="Ideal RPM for 2.5mm at Vc=250 m/min = 31,831">31,831 ideal</div>
+            <div class="rpm-bar ideal" style="width:40%">31,831 ideal</div>
           </div>
           <div class="rpm-bar-wrap">
-            <div class="rpm-bar actual" style="width:15.1%" data-tip="12,000 RPM is 37.7% of ideal for 2.5mm — closest to acceptable but still too slow for clean cutting">12,000</div>
-            <span class="rpm-vc" data-tip="38% of recommended — best of the group but still well below minimum effective cutting speed">38% Vc</span>
+            <div class="rpm-bar actual" style="width:15.1%">12,000</div>
+            <span class="rpm-vc">38% Vc</span>
           </div>
         </div>
       </div>
@@ -781,178 +698,116 @@
         <table class="cutting-tbl">
           <thead>
             <tr>
-              <th rowspan="2" data-tip="Diameter of the end mill being used" style="vertical-align:bottom">Tool Dia</th>
-              <th colspan="3" data-tip="Haas native 12,000 RPM — baseline values" style="text-align:center;border-bottom:1px solid var(--bdr)">12k RPM (Haas Native)</th>
-              <th colspan="3" data-tip="Projected at 30,000 RPM — 2.5× the 12k baseline. Typical compact spindle enhancer speed." style="text-align:center;border-bottom:1px solid var(--bdr);color:var(--green)">30k RPM (×2.5)</th>
-              <th colspan="3" data-tip="Projected at 60,000 RPM — 5× the 12k baseline. High-speed micro machining territory." style="text-align:center;border-bottom:1px solid var(--bdr);color:var(--amber)">60k RPM (×5)</th>
+              <th rowspan="2" style="vertical-align:bottom">Tool Dia</th>
+              <th colspan="2" style="text-align:center;border-bottom:1px solid var(--bdr)">12k RPM</th>
+              <th colspan="2" style="text-align:center;border-bottom:1px solid var(--bdr);color:var(--green)">30k RPM</th>
+              <th colspan="2" style="text-align:center;border-bottom:1px solid var(--bdr);color:var(--amber)">60k RPM</th>
             </tr>
             <tr>
-              <th data-tip="Cutting power at 12k RPM">Power</th>
-              <th data-tip="Energy rate at 12k RPM">kJ/min</th>
-              <th data-tip="Load equivalent on 11.2 kW continuous rating">Load%</th>
-              <th data-tip="Cutting power at 30k RPM">Power</th>
-              <th data-tip="Energy rate at 30k RPM">kJ/min</th>
-              <th data-tip="Load equivalent at 30k">Load%</th>
-              <th data-tip="Cutting power at 60k RPM">Power</th>
-              <th data-tip="Energy rate at 60k RPM">kJ/min</th>
-              <th data-tip="Load equivalent at 60k">Load%</th>
+              <th>Power</th>
+              <th>kJ/min</th>
+              <th>Power</th>
+              <th>kJ/min</th>
+              <th>Power</th>
+              <th>kJ/min</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="hi" data-tip="1.0 mm — smallest tool, very low material removal rate">1.0 mm</td>
-              <td data-tip="12k: under 2W cutting power">0.6–1.9 W</td>
-              <td data-tip="12k: trivial energy">0.03–0.12</td>
-              <td class="dm" data-tip="Invisible on load meter">0.02%</td>
-              <td data-tip="30k: 2.5× baseline">1.5–4.8 W</td>
-              <td data-tip="30k energy rate">0.09–0.29</td>
-              <td class="dm">0.04%</td>
-              <td data-tip="60k: 5× baseline">3.0–9.5 W</td>
-              <td data-tip="60k energy rate">0.18–0.57</td>
-              <td class="dm">0.09%</td>
+              <td class="hi">1.0 mm</td>
+              <td>0.6–1.9 W</td>
+              <td>0.03–0.12</td>
+              <td>1.5–4.8 W</td>
+              <td>0.09–0.29</td>
+              <td>3.0–9.5 W</td>
+              <td>0.18–0.57</td>
             </tr>
             <tr>
-              <td class="hi" data-tip="1.5 mm — slightly more aggressive, still very light">1.5 mm</td>
-              <td data-tip="12k: under 7W">1.9–6.4 W</td>
-              <td data-tip="12k energy rate">0.12–0.39</td>
-              <td class="dm">0.06%</td>
-              <td data-tip="30k: up to 16W">4.8–16.0 W</td>
-              <td data-tip="30k energy rate">0.29–0.96</td>
-              <td class="dm">0.14%</td>
-              <td data-tip="60k: up to 32W">9.5–32.0 W</td>
-              <td data-tip="60k energy rate">0.57–1.92</td>
-              <td class="dm">0.29%</td>
+              <td class="hi">1.5 mm</td>
+              <td>1.9–6.4 W</td>
+              <td>0.12–0.39</td>
+              <td>4.8–16.0 W</td>
+              <td>0.29–0.96</td>
+              <td>9.5–32.0 W</td>
+              <td>0.57–1.92</td>
             </tr>
             <tr>
-              <td class="hi" data-tip="2.0 mm — common for fine detail work">2.0 mm</td>
-              <td data-tip="12k: up to ~16W">4.4–15.7 W</td>
-              <td data-tip="12k energy rate">0.27–0.95</td>
-              <td class="dm">0.14%</td>
-              <td data-tip="30k: up to ~39W — noticeable on small enhancer">11.0–39.3 W</td>
-              <td data-tip="30k energy rate">0.66–2.36</td>
-              <td class="dm">0.35%</td>
-              <td data-tip="60k: up to ~79W — enhancer motor working hard">22.0–78.5 W</td>
-              <td data-tip="60k energy rate">1.32–4.71</td>
-              <td class="dm">0.70%</td>
+              <td class="hi">2.0 mm</td>
+              <td>4.4–15.7 W</td>
+              <td>0.27–0.95</td>
+              <td>11.0–39.3 W</td>
+              <td>0.66–2.36</td>
+              <td>22.0–78.5 W</td>
+              <td>1.32–4.71</td>
             </tr>
             <tr>
-              <td class="hi" data-tip="2.5 mm — largest in range, highest power demand">2.5 mm</td>
-              <td data-tip="12k: up to ~32W">8.7–31.6 W</td>
-              <td data-tip="12k: up to ~2 kJ/min">0.52–1.90</td>
-              <td class="dm">0.28%</td>
-              <td data-tip="30k: up to ~79W — significant for battery">21.8–79.0 W</td>
-              <td data-tip="30k energy rate">1.31–4.74</td>
-              <td class="dm">0.71%</td>
-              <td data-tip="60k: up to 158W — real battery drain">43.5–158.0 W</td>
-              <td data-tip="60k: up to 9.5 kJ/min">2.61–9.48</td>
-              <td class="dm">1.41%</td>
+              <td class="hi">2.5 mm</td>
+              <td>8.7–31.6 W</td>
+              <td>0.52–1.90</td>
+              <td>21.8–79.0 W</td>
+              <td>1.31–4.74</td>
+              <td>43.5–158.0 W</td>
+              <td>2.61–9.48</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="co" data-tip="Key insight: if using an external spindle enhancer motor, the Haas load meter only shows the Haas spindle load — not the enhancer's motor load. You need separate current monitoring on the enhancer.">
-        <b>Interpretation:</b> if you drive the cutter with an external spindle enhancer, Haas spindle load will not represent enhancer motor load. Log enhancer electrical current separately.
-      </div>
     </div>
   </section>
 
   <section id="calculator">
     <div class="ctr">
-      <div class="slabel" data-tip="Section 3: estimate how long the battery will last for your job">03 | Calculator</div>
-      <h2 data-tip="Enter your expected motor draw and machining time to estimate battery life">Battery Runtime Estimator</h2>
-      <p class="sdesc" data-tip="The SycoTec Speeder 60 is rated at 500W max with up to 8 hours claimed runtime. Actual draw depends on tool size, cut depth, and material. The cutting power table above shows the cutter load — add motor overhead for total draw.">Estimate how long a battery charge will last based on your expected motor draw and job length.</p>
+      <div class="slabel">02 | Calculator</div>
+      <h2>Battery Runtime Estimator</h2>
+      <p class="sdesc">Estimate how long a battery charge will last based on your expected motor draw and job length.</p>
 
       <div class="calc-grid">
-        <label data-tip="Estimated average motor draw during machining. Includes cutting power plus motor overhead (bearings, no-load spin, electronics). Light finishing ~80-150W, medium cuts ~150-250W, aggressive cuts ~250-400W.">Avg Motor Draw (W)
+        <label>Avg Motor Draw (W)
           <input id="c-watts" type="number" min="0" step="10" value="200">
         </label>
-        <label data-tip="Total time the enhancer spindle will be running during your job. Include idle spin time between cuts.">Machining Time (min)
+        <label>Machining Time (min)
           <input id="c-time" type="number" min="0" step="1" value="60">
         </label>
-        <label data-tip="Select your battery. SycoTec Speeder uses a proprietary pack (capacity estimated from 8hr claim). Other packs shown for DIY reference.">Battery Pack
+        <label>Battery Pack
           <select id="c-batt-type">
             <option value="500">SycoTec Speeder 60 (est. ~500 Wh)</option>
             <option value="custom">Custom (enter Wh below)</option>
           </select>
         </label>
-        <label id="custom-wh-label" style="display:none" data-tip="Enter the nominal watt-hours of your battery pack.">Custom Wh
+        <label id="custom-wh-label" style="display:none">Custom Wh
           <input id="c-custom-wh" type="number" min="1" step="1" value="200">
         </label>
-        <label data-tip="Real-world usable fraction of nominal capacity. Accounts for voltage sag, BMS cutoff, and heat. Proprietary packs with good BMS ~85%. Generic packs ~75-80%.">Usable Fraction (%)
+        <label>Usable Fraction (%)
           <input id="c-eff" type="number" min="50" max="100" step="5" value="85">
         </label>
       </div>
 
       <div class="calc-results">
-        <div class="calc-card" data-tip="How long one full charge will last at your average motor draw. Calculated as: (Battery Wh x Usable Fraction) / Motor Watts x 60 minutes.">
+        <div class="calc-card">
           <h4>Battery Life</h4><div class="cv" id="r-runtime">-</div><div class="cu">per charge</div>
         </div>
-        <div class="calc-card" data-tip="Total energy your job will consume. Motor Watts x Time / 60 = Wh.">
+        <div class="calc-card">
           <h4>Energy Needed</h4><div class="cv" id="r-energy">-</div><div class="cu" id="r-energy-kj">-</div>
         </div>
-        <div class="calc-card" data-tip="Whether one charge covers your full job, or how many charges/swaps you need.">
+        <div class="calc-card">
           <h4>Verdict</h4><div class="cv" id="r-count">-</div><div class="cu" id="r-swap">-</div>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="macro">
-    <div class="ctr">
-      <div class="slabel" data-tip="Section 4: workflow for capturing real spindle load data from the Haas control">04 | Macro Logging</div>
-      <h2 data-tip="Use the included macro and script to log spindle load over time and export to CSV">Haas Data Capture Workflow</h2>
-      <p class="sdesc" data-tip="All files are included in this GitHub repo — just load the macro and run it">Use the logger files in this repo. Keep this step simple and repeatable.</p>
-
-      <ul>
-        <li data-tip="#1098 is a read-only macro variable that returns the spindle load percentage from the vector drive. #3027 returns the actual spindle RPM. Both update in real-time.">Use <code data-tip="Haas system macro variable: spindle load % (0-200). Read-only. Updated by the vector drive in real-time.">#1098</code> for spindle load percent and <code data-tip="Haas system macro variable: actual spindle RPM. Read-only. Shows real RPM, not commanded RPM.">#3027</code> for actual spindle RPM.</li>
-        <li data-tip="O9010 is a G-code subprogram that reads #1098 and #3027 in a loop, calculates power and cumulative energy, and outputs CSV lines via DPRNT.">Run <code data-tip="G-code macro: samples spindle load every 1s (configurable), outputs CSV via DPRNT. Edit #500/#501/#502 to configure.">macros/O9010.NC</code> on the control.</li>
-        <li data-tip="DPRNT (Debug Print) writes text lines to an external file or TCP port. Configure the destination with Setting 261 (output mode) and Setting 262 (file path or IP).">Export <code data-tip="Raw text file generated by DPRNT statements. Contains comma-separated data lines — not a true CSV until cleaned.">DPRNT.OUT</code> from <code data-tip="Setting 261 = output mode (FILE or TCP). Setting 262 = destination path (USB, network share, or IP:port).">Setting 261/262</code> destination.</li>
-        <li data-tip="PowerShell script that strips DPRNT formatting, trims whitespace from fields, removes LOG_COMPLETE marker, and writes a clean CSV file.">Convert to CSV with <code data-tip="PowerShell script included in this repo. Usage: -InputPath 'DPRNT.OUT' -OutputPath 'log.csv'. Requires -ExecutionPolicy Bypass.">scripts/convert_dprnt_to_csv.ps1</code>.</li>
-      </ul>
-
-      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px" data-tip="The three-step pipeline: Haas control collects data → file transfer → Windows PC processes it. The Haas control cannot run PowerShell.">Data Pipeline: Haas → USB → PC</h3>
-
-      <div class="sg" style="grid-template-columns:repeat(3, 1fr)">
-        <div class="sc" data-tip="Step 1 runs entirely on the Haas CNC control. The macro reads spindle load (#1098) and RPM (#3027) in a loop, then DPRNT writes each sample as a text line to DPRNT.OUT. Enable Setting 261 (output mode: FILE) and Setting 262 (destination path).">
-          <div class="sv" style="font-size:16px;color:var(--amber)">1. Haas Control</div>
-          <div class="sl" style="margin:8px 0 6px">ON THE MACHINE</div>
-          <p style="font-size:13px;color:var(--c2);line-height:1.5">Run <code>O9010.NC</code> macro while machining. It reads <code>#1098</code> (load %) and <code>#3027</code> (RPM) every second and writes CSV lines via <code>DPRNT[]</code> to the control's memory.</p>
-          <p style="font-size:12px;color:var(--c3);margin-top:8px">Requires: Setting 261 = FILE, Setting 262 = path</p>
-        </div>
-        <div class="sc" data-tip="Step 2 is a simple file transfer. The Haas control stores DPRNT.OUT in its memory or on a connected USB drive. Copy the file to any Windows PC. Methods: USB stick (most common), Haas Net Share (ethernet), or serial/TCP port if configured in Setting 262.">
-          <div class="sv" style="font-size:16px;color:var(--amber)">2. Transfer File</div>
-          <div class="sl" style="margin:8px 0 6px">USB / NETWORK / TCP</div>
-          <p style="font-size:13px;color:var(--c2);line-height:1.5">Copy <code>DPRNT.OUT</code> from the Haas control to a Windows PC. Use a USB stick, network share (Net Share / WIPS option), or serial/TCP connection.</p>
-          <p style="font-size:12px;color:var(--c3);margin-top:8px">Raw text file — not yet a clean CSV</p>
-        </div>
-        <div class="sc" data-tip="Step 3 runs on a Windows PC only. PowerShell is a Windows scripting language — the Haas control runs a proprietary real-time OS and cannot execute PowerShell, Python, or any external scripts. The script strips DPRNT formatting artifacts and outputs a clean CSV.">
-          <div class="sv" style="font-size:16px;color:var(--amber)">3. Windows PC</div>
-          <div class="sl" style="margin:8px 0 6px">POWERSHELL SCRIPT</div>
-          <p style="font-size:13px;color:var(--c2);line-height:1.5">Run <code>convert_dprnt_to_csv.ps1</code> to parse the raw DPRNT output into a clean CSV with columns for timestamp, load %, RPM, and cumulative energy.</p>
-          <p style="font-size:12px;color:var(--c3);margin-top:8px">Haas cannot run PowerShell — PC only</p>
-        </div>
-      </div>
-
-      <div class="fm" data-tip="Copy-paste this command into PowerShell on your Windows PC to convert your DPRNT output to a clean CSV file. The -ExecutionPolicy Bypass flag is needed because Windows blocks unsigned scripts by default.">
-        powershell -ExecutionPolicy Bypass -File .\scripts\convert_dprnt_to_csv.ps1 -InputPath "DPRNT.OUT" -OutputPath "slotting_load_log.csv"
-      </div>
-    </div>
-  </section>
-
   <section id="sources">
     <div class="ctr">
-      <div class="slabel" data-tip="Section 5: external reference links used to build this page">05 | Sources</div>
-      <h2 data-tip="Official manufacturer documentation and spec sheets">Reference Links</h2>
+      <div class="slabel">03 | Sources</div>
+      <h2>Reference Links</h2>
       <div class="src-list">
-        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-4.html" target="_blank" rel="noopener" data-tip="Official Haas VF-4 spec sheet — 30hp spindle, 40-taper, 50x20x25 travels">Haas VF-4 Specs</a>
-        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-5-40.html" target="_blank" rel="noopener" data-tip="Official Haas VF-5/40 spec sheet — same 30hp spindle platform, 50x26x25 travels">Haas VF-5/40 Specs</a>
-        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/large/vf-6-40.html" target="_blank" rel="noopener" data-tip="Official Haas VF-6/40 spec sheet — same 30hp spindle, largest table in the group: 64x32x30 travels">Haas VF-6/40 Specs</a>
-        <a href="https://www.haascnc.com/productivity/spindles/12k-40t-in.html" target="_blank" rel="noopener" data-tip="Haas 12,000 RPM 40-taper spindle option — replaces the standard 8,100 RPM cartridge">Haas 12k 40T Spindle Option</a>
-        <a href="https://www.haascnc.com/reference-container/torque-chart-note.html" target="_blank" rel="noopener" data-tip="Haas torque curve documentation — explains how torque, power, and RPM relate across the spindle speed range">Haas Torque Chart Note</a>
-        <a href="https://www.haascnc.com/service/online-operator-s-manuals/mill-operator-s-manual/mill---macros.html" target="_blank" rel="noopener" data-tip="Full Haas macro variable reference — includes #1098 (spindle load), #3027 (RPM), #3026 (tool number), and hundreds more">Haas Mill Macro Variables</a>
-        <a href="https://www.haascnc.com/service/troubleshooting-and-how-to/how-to/communication-with-external-devices---dprnt.html" target="_blank" rel="noopener" data-tip="Haas DPRNT setup guide — how to configure Settings 261/262 and format DPRNT output statements in G-code">Haas DPRNT Guide</a>
-        <a href="https://speeder.sycotec.eu/en/" target="_blank" rel="noopener" data-tip="SycoTec Speeder 60 ER11 — battery-powered spindle enhancer. 500W max, 7k-60k RPM, ER11 collet, 3.4 kg, up to 8hr runtime. From €6,000.">SycoTec Speeder 60 ER11</a>
+        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-4.html" target="_blank" rel="noopener">Haas VF-4 Specs</a>
+        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/medium/vf-5-40.html" target="_blank" rel="noopener">Haas VF-5/40 Specs</a>
+        <a href="https://www.haascnc.com/machines/vertical-mills/vf-series/models/large/vf-6-40.html" target="_blank" rel="noopener">Haas VF-6/40 Specs</a>
+        <a href="https://www.haascnc.com/productivity/spindles/12k-40t-in.html" target="_blank" rel="noopener">Haas 12k 40T Spindle Option</a>
+        <a href="https://www.haascnc.com/reference-container/torque-chart-note.html" target="_blank" rel="noopener">Haas Torque Chart Note</a>
+        <a href="https://speeder.sycotec.eu/en/" target="_blank" rel="noopener">SycoTec Speeder 60 ER11</a>
       </div>
     </div>
   </section>
@@ -1016,25 +871,6 @@
     })();
   </script>
 
-  <div id="tip-box"></div>
-  <script>
-    (function () {
-      var box = document.getElementById('tip-box');
-      document.addEventListener('mouseover', function (e) {
-        var el = e.target.closest('[data-tip]');
-        if (el) {
-          box.textContent = el.getAttribute('data-tip');
-          box.classList.add('visible');
-        }
-      });
-      document.addEventListener('mouseout', function (e) {
-        var el = e.target.closest('[data-tip]');
-        if (el) {
-          box.classList.remove('visible');
-        }
-      });
-    })();
-  </script>
   <script>
     (function () {
       var btn = document.getElementById('theme-toggle');
@@ -1056,6 +892,47 @@
           localStorage.setItem('theme', 'light');
         }
       });
+    })();
+  </script>
+  <script>
+    (function () {
+      // Cutting power at 12k RPM baseline (mid-range watts for full slotting in 6061-T6)
+      // From the cutting power table: using midpoint of each range
+      var base12k = { 1.0: 1.25, 1.5: 4.15, 2.0: 10.05, 2.5: 20.15 };
+      var batteryWh = 500 * 0.85; // 425 Wh usable
+
+      function estCalc() {
+        var inputs = document.querySelectorAll('.est-rpm');
+        inputs.forEach(function (inp) {
+          var row = inp.closest('tr');
+          var dia = parseFloat(inp.getAttribute('data-dia'));
+          var rpm = parseFloat(inp.value) || 30000;
+
+          // Cutting power scales linearly with RPM from 12k baseline
+          var cutW = base12k[dia] * (rpm / 12000);
+          // Motor overhead: 40W base + 1.5W per 1000 RPM + 50% of cutting power
+          var ohW = 40 + (rpm / 1000) * 1.5 + cutW * 0.5;
+          var totalW = cutW + ohW;
+          var lifeHrs = totalW > 0 ? batteryWh / totalW : 0;
+
+          row.querySelector('.est-cut').textContent = cutW.toFixed(0) + ' W';
+          row.querySelector('.est-oh').textContent = ohW.toFixed(0) + ' W';
+          row.querySelector('.est-total').textContent = totalW.toFixed(0) + ' W';
+
+          var lifeCell = row.querySelector('.est-life');
+          if (lifeHrs >= 1) {
+            lifeCell.textContent = lifeHrs.toFixed(1) + ' hrs';
+          } else {
+            lifeCell.textContent = (lifeHrs * 60).toFixed(0) + ' min';
+          }
+          lifeCell.style.color = lifeHrs >= 4 ? 'var(--green)' : lifeHrs >= 2 ? 'var(--amber)' : 'var(--c2)';
+        });
+      }
+
+      document.querySelectorAll('.est-rpm').forEach(function (inp) {
+        inp.addEventListener('input', estCalc);
+      });
+      estCalc();
     })();
   </script>
 </body>
