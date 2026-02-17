@@ -578,6 +578,26 @@
         </div>
       </div>
 
+      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px">Where Does the Power Go?</h3>
+      <p class="sdesc">Almost all battery drain is the motor itself, not the cutting. A 1 mm endmill at 30,000 RPM needs about 3W to cut aluminium. But the Speeder motor draws ~90W total to deliver that 3W. Here is why:</p>
+
+      <div class="sg" style="grid-template-columns:repeat(2, 1fr)">
+        <div class="sc">
+          <div class="sv" style="font-size:18px;color:var(--green)">3–50 W</div>
+          <div class="sl">Cutting Power</div>
+          <div class="ss">Energy to remove chips. Tiny for small tools in aluminium. Scales with tool size, RPM, and feed rate. See the 6061 table below.</div>
+        </div>
+        <div class="sc">
+          <div class="sv" style="font-size:18px;color:var(--amber)">60–200 W</div>
+          <div class="sl">Motor Overhead</div>
+          <div class="ss">The rest. Bearing friction, rotor windage (air drag at 30k+ RPM), motor controller electronics, and motor inefficiency (electrical in > mechanical out). This is the real battery killer.</div>
+        </div>
+      </div>
+
+      <div class="co">
+        <b>Example:</b> 1 mm tool at 30,000 RPM — cutting power is ~3W, motor overhead is ~87W, total draw ~90W. That means <b>97% of battery drain is just keeping the motor spinning</b>, only 3% goes to actually removing material. Even with a 2.5 mm tool at 30k the split is roughly 30% cutting / 70% overhead. The motor has to spin at 30,000+ RPM whether it is cutting or not.
+      </div>
+
       <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px">How We Got These Numbers</h3>
       <p class="sdesc">Adjust the RPM to see how spindle speed affects cutting power, motor draw, and battery life.</p>
 
