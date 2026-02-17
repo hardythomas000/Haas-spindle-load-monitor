@@ -519,7 +519,6 @@
       font-size: 11px;
       padding: 6px 10px;
       cursor: pointer;
-      margin-left: auto;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -536,6 +535,14 @@
       font-size: 14px;
       line-height: 1;
     }
+
+    /* === Cutting table RPM group colours === */
+    .cutting-tbl td:nth-child(2),
+    .cutting-tbl td:nth-child(3) { color: var(--c2); }
+    .cutting-tbl td:nth-child(5),
+    .cutting-tbl td:nth-child(6) { color: var(--green); }
+    .cutting-tbl td:nth-child(8),
+    .cutting-tbl td:nth-child(9) { color: var(--amber); }
 
     #tip-box::before {
       content: 'INFO';
@@ -695,123 +702,74 @@
       </div>
 
       <div class="tw">
-        <table>
+        <table class="cutting-tbl">
           <thead>
             <tr>
-              <th data-tip="Diameter of the end mill being used">Tool Dia</th>
-              <th data-tip="Estimated power consumed by the actual metal cutting process only — not total spindle draw">Cutting Power</th>
-              <th data-tip="Kilojoules of energy consumed per minute of cutting at this power level">Energy Rate</th>
-              <th data-tip="What this tiny cutting power represents as a % of the 11.2 kW continuous rating — essentially negligible">Load Equiv on 11.2 kW</th>
+              <th rowspan="2" data-tip="Diameter of the end mill being used" style="vertical-align:bottom">Tool Dia</th>
+              <th colspan="3" data-tip="Haas native 12,000 RPM — baseline values" style="text-align:center;border-bottom:1px solid var(--bdr)">12k RPM (Haas Native)</th>
+              <th colspan="3" data-tip="Projected at 30,000 RPM — 2.5× the 12k baseline. Typical compact spindle enhancer speed." style="text-align:center;border-bottom:1px solid var(--bdr);color:var(--green)">30k RPM (×2.5)</th>
+              <th colspan="3" data-tip="Projected at 60,000 RPM — 5× the 12k baseline. High-speed micro machining territory." style="text-align:center;border-bottom:1px solid var(--bdr);color:var(--amber)">60k RPM (×5)</th>
+            </tr>
+            <tr>
+              <th data-tip="Cutting power at 12k RPM">Power</th>
+              <th data-tip="Energy rate at 12k RPM">kJ/min</th>
+              <th data-tip="Load equivalent on 11.2 kW continuous rating">Load%</th>
+              <th data-tip="Cutting power at 30k RPM">Power</th>
+              <th data-tip="Energy rate at 30k RPM">kJ/min</th>
+              <th data-tip="Load equivalent at 30k">Load%</th>
+              <th data-tip="Cutting power at 60k RPM">Power</th>
+              <th data-tip="Energy rate at 60k RPM">kJ/min</th>
+              <th data-tip="Load equivalent at 60k">Load%</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="hi" data-tip="1.0 mm diameter — smallest tool in the range. Very low material removal rate.">1.0 mm</td>
-              <td data-tip="Less than 2 watts — the cutting itself uses almost no power">0.6 to 1.9 W</td>
-              <td data-tip="At most 0.12 kJ/min — trivial energy consumption">0.03 to 0.12 kJ/min</td>
-              <td class="dm" data-tip="Effectively 0% on the Haas load meter — you won't see the bar move">0.004 to 0.018%</td>
+              <td class="hi" data-tip="1.0 mm — smallest tool, very low material removal rate">1.0 mm</td>
+              <td data-tip="12k: under 2W cutting power">0.6–1.9 W</td>
+              <td data-tip="12k: trivial energy">0.03–0.12</td>
+              <td class="dm" data-tip="Invisible on load meter">0.02%</td>
+              <td data-tip="30k: 2.5× baseline">1.5–4.8 W</td>
+              <td data-tip="30k energy rate">0.09–0.29</td>
+              <td class="dm">0.04%</td>
+              <td data-tip="60k: 5× baseline">3.0–9.5 W</td>
+              <td data-tip="60k energy rate">0.18–0.57</td>
+              <td class="dm">0.09%</td>
             </tr>
             <tr>
-              <td class="hi" data-tip="1.5 mm diameter — slightly more aggressive but still very light cutting">1.5 mm</td>
-              <td data-tip="Under 7 watts — still negligible vs. spindle no-load draw">1.9 to 6.4 W</td>
-              <td data-tip="Under 0.4 kJ/min of cutting energy">0.12 to 0.39 kJ/min</td>
-              <td class="dm" data-tip="Well under 0.1% — invisible on the load meter">0.016 to 0.056%</td>
+              <td class="hi" data-tip="1.5 mm — slightly more aggressive, still very light">1.5 mm</td>
+              <td data-tip="12k: under 7W">1.9–6.4 W</td>
+              <td data-tip="12k energy rate">0.12–0.39</td>
+              <td class="dm">0.06%</td>
+              <td data-tip="30k: up to 16W">4.8–16.0 W</td>
+              <td data-tip="30k energy rate">0.29–0.96</td>
+              <td class="dm">0.14%</td>
+              <td data-tip="60k: up to 32W">9.5–32.0 W</td>
+              <td data-tip="60k energy rate">0.57–1.92</td>
+              <td class="dm">0.29%</td>
             </tr>
             <tr>
-              <td class="hi" data-tip="2.0 mm diameter — moderate micro endmill, common for fine detail work">2.0 mm</td>
-              <td data-tip="Up to ~16 watts of cutting power">4.4 to 15.7 W</td>
-              <td data-tip="Under 1 kJ/min — still very low energy consumption">0.27 to 0.95 kJ/min</td>
-              <td class="dm" data-tip="About 0.1% load — the Haas meter won't register this">0.040 to 0.141%</td>
+              <td class="hi" data-tip="2.0 mm — common for fine detail work">2.0 mm</td>
+              <td data-tip="12k: up to ~16W">4.4–15.7 W</td>
+              <td data-tip="12k energy rate">0.27–0.95</td>
+              <td class="dm">0.14%</td>
+              <td data-tip="30k: up to ~39W — noticeable on small enhancer">11.0–39.3 W</td>
+              <td data-tip="30k energy rate">0.66–2.36</td>
+              <td class="dm">0.35%</td>
+              <td data-tip="60k: up to ~79W — enhancer motor working hard">22.0–78.5 W</td>
+              <td data-tip="60k energy rate">1.32–4.71</td>
+              <td class="dm">0.70%</td>
             </tr>
             <tr>
-              <td class="hi" data-tip="2.5 mm diameter — largest tool in this micro range. Highest power of the group.">2.5 mm</td>
-              <td data-tip="Up to ~32 watts — still small compared to spindle motor capacity">8.7 to 31.6 W</td>
-              <td data-tip="Up to ~2 kJ/min — the most energy-intensive option in this table">0.52 to 1.90 kJ/min</td>
-              <td class="dm" data-tip="Under 0.3% — still far too small to appear on the load meter">0.079 to 0.282%</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:6px" data-tip="Estimated cutting power at 30,000 RPM — typical speed for a compact spindle enhancer. Power scales linearly from 12k baseline (×2.5).">At 30,000 RPM (Spindle Enhancer)</h3>
-      <p class="sdesc" data-tip="30k RPM is a common speed for small external high-speed spindles. Cutting power is 2.5× the 12k values because you're removing material 2.5× faster at the same chipload.">Projected cutting power at 30k RPM with typical chiploads — 2.5× the 12k baseline. This is the power the enhancer motor must supply.</p>
-
-      <div class="tw">
-        <table>
-          <thead>
-            <tr>
-              <th data-tip="Diameter of the end mill">Tool Dia</th>
-              <th data-tip="Cutting power at 30k RPM — 2.5× the 12k value">Cutting Power</th>
-              <th data-tip="Energy consumption rate at 30k RPM">Energy Rate</th>
-              <th data-tip="Equivalent load on the enhancer motor (if rated at 11.2 kW — actual enhancer will be much smaller)">Load Equiv on 11.2 kW</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="hi" data-tip="1.0 mm at 30k RPM">1.0 mm</td>
-              <td data-tip="1.5–4.8 watts — still very low power">1.5 – 4.8 W</td>
-              <td data-tip="Under 0.3 kJ/min">0.09 – 0.29 kJ/min</td>
-              <td class="dm" data-tip="Still negligible on an 11.2 kW scale">0.013 – 0.043%</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="1.5 mm at 30k RPM">1.5 mm</td>
-              <td data-tip="Up to 16 watts">4.8 – 16.0 W</td>
-              <td data-tip="Under 1 kJ/min">0.29 – 0.96 kJ/min</td>
-              <td class="dm" data-tip="Under 0.15%">0.043 – 0.143%</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="2.0 mm at 30k RPM">2.0 mm</td>
-              <td data-tip="Up to ~39 watts — starting to be noticeable on a small enhancer motor">11.0 – 39.3 W</td>
-              <td data-tip="Up to ~2.4 kJ/min">0.66 – 2.36 kJ/min</td>
-              <td class="dm" data-tip="About 0.35% of 11.2 kW">0.098 – 0.351%</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="2.5 mm at 30k RPM — highest power in this table">2.5 mm</td>
-              <td data-tip="Up to ~79 watts — significant for a battery-powered enhancer">21.8 – 79.0 W</td>
-              <td data-tip="Up to ~4.7 kJ/min">1.31 – 4.74 kJ/min</td>
-              <td class="dm" data-tip="Under 0.7%">0.194 – 0.705%</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:6px" data-tip="Estimated cutting power at 60,000 RPM — high-speed micro machining territory. Power scales linearly from 12k baseline (×5.0).">At 60,000 RPM (High-Speed Enhancer)</h3>
-      <p class="sdesc" data-tip="60k RPM is typical for precision micro machining spindles. Cutting power is 5× the 12k values. At this speed, battery drain and tool breakage become real concerns.">Projected cutting power at 60k RPM — 5× the 12k baseline. Higher speeds enable aggressive micro-machining but drain battery faster.</p>
-
-      <div class="tw">
-        <table>
-          <thead>
-            <tr>
-              <th data-tip="Diameter of the end mill">Tool Dia</th>
-              <th data-tip="Cutting power at 60k RPM — 5× the 12k value">Cutting Power</th>
-              <th data-tip="Energy consumption rate at 60k RPM">Energy Rate</th>
-              <th data-tip="Equivalent load on 11.2 kW scale">Load Equiv on 11.2 kW</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="hi" data-tip="1.0 mm at 60k RPM">1.0 mm</td>
-              <td data-tip="3–9.5 watts — still modest despite extreme RPM">3.0 – 9.5 W</td>
-              <td data-tip="Under 0.6 kJ/min">0.18 – 0.57 kJ/min</td>
-              <td class="dm" data-tip="Under 0.1%">0.027 – 0.085%</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="1.5 mm at 60k RPM">1.5 mm</td>
-              <td data-tip="Up to 32 watts">9.5 – 32.0 W</td>
-              <td data-tip="Up to ~1.9 kJ/min">0.57 – 1.92 kJ/min</td>
-              <td class="dm" data-tip="Under 0.3%">0.085 – 0.286%</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="2.0 mm at 60k RPM — significant power for a small motor">2.0 mm</td>
-              <td data-tip="Up to ~79 watts — this is where small enhancer motors start working hard">22.0 – 78.5 W</td>
-              <td data-tip="Up to ~4.7 kJ/min">1.32 – 4.71 kJ/min</td>
-              <td class="dm" data-tip="About 0.7% of 11.2 kW">0.196 – 0.701%</td>
-            </tr>
-            <tr>
-              <td class="hi" data-tip="2.5 mm at 60k RPM — highest power in any table. Battery drain is real at this level.">2.5 mm</td>
-              <td data-tip="Up to 158 watts — a small battery-powered motor will feel this">43.5 – 158.0 W</td>
-              <td data-tip="Up to ~9.5 kJ/min — significant energy consumption">2.61 – 9.48 kJ/min</td>
-              <td class="dm" data-tip="About 1.4% — still small on the 11.2 kW scale, but large for a 200-500W enhancer motor">0.388 – 1.411%</td>
+              <td class="hi" data-tip="2.5 mm — largest in range, highest power demand">2.5 mm</td>
+              <td data-tip="12k: up to ~32W">8.7–31.6 W</td>
+              <td data-tip="12k: up to ~2 kJ/min">0.52–1.90</td>
+              <td class="dm">0.28%</td>
+              <td data-tip="30k: up to ~79W — significant for battery">21.8–79.0 W</td>
+              <td data-tip="30k energy rate">1.31–4.74</td>
+              <td class="dm">0.71%</td>
+              <td data-tip="60k: up to 158W — real battery drain">43.5–158.0 W</td>
+              <td data-tip="60k: up to 9.5 kJ/min">2.61–9.48</td>
+              <td class="dm">1.41%</td>
             </tr>
           </tbody>
         </table>
@@ -839,7 +797,7 @@
         <label data-tip="The load % shown on the Haas control's spindle bar graph, or read from macro variable #1098. Range: 0-200%.">Spindle Load (%)
           <input id="c-load" type="number" min="0" max="200" step="0.1" value="60">
         </label>
-        <label data-tip="Total time the spindle is under load while machiningting operation, in minutes">Cut Duration (min)
+        <label data-tip="Total time the spindle is under load while machining, in minutes">Cut Duration (min)
           <input id="c-dur" type="number" min="0" step="0.1" value="10">
         </label>
         <label data-tip="Rated capacity of your battery pack in watt-hours. Example: DeWalt FLEXVOLT 6Ah 60V = 360 Wh nominal, ~240 Wh usable.">Battery Capacity (Wh)
@@ -901,10 +859,6 @@
           <p style="font-size:13px;color:var(--c2);line-height:1.5">Run <code>convert_dprnt_to_csv.ps1</code> to parse the raw DPRNT output into a clean CSV with columns for timestamp, load %, RPM, and cumulative energy.</p>
           <p style="font-size:12px;color:var(--c3);margin-top:8px">Haas cannot run PowerShell — PC only</p>
         </div>
-      </div>
-
-      <div class="co" data-tip="Important clarification: the PowerShell script is NOT meant to run on the Haas machine. The Haas control only runs G-code. Data collection happens on the machine, data processing happens on your PC.">
-        <b>Note:</b> The Haas control runs a proprietary real-time OS — it can only execute G-code and macros. The macro does the data <b>collection</b>, the PowerShell script does the data <b>processing</b> on a separate Windows PC.
       </div>
 
       <div class="fm" data-tip="Copy-paste this command into PowerShell on your Windows PC to convert your DPRNT output to a clean CSV file. The -ExecutionPolicy Bypass flag is needed because Windows blocks unsigned scripts by default.">
