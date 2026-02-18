@@ -562,40 +562,45 @@
 
       <div class="sg" style="grid-template-columns:repeat(3, 1fr)">
         <div class="sc">
-          <div class="sv" style="color:var(--green)">4–8 hrs</div>
+          <div class="sv" style="color:var(--green)">3.5–7 hrs</div>
           <div class="sl">Light Finishing</div>
-          <div class="ss">1–1.5 mm tools, ~80–150W draw</div>
+          <div class="ss">1–1.5 mm tools, ~60–120W battery draw</div>
         </div>
         <div class="sc">
-          <div class="sv" style="color:var(--amber)">2–4 hrs</div>
+          <div class="sv" style="color:var(--amber)">2–3.5 hrs</div>
           <div class="sl">Medium Cuts</div>
-          <div class="ss">2 mm tools, ~150–250W draw</div>
+          <div class="ss">2 mm tools, ~120–210W battery draw</div>
         </div>
         <div class="sc">
           <div class="sv" style="color:var(--c2)">1–2 hrs</div>
           <div class="sl">Heavy Cuts</div>
-          <div class="ss">2.5 mm tools, ~250–400W draw</div>
+          <div class="ss">2.5 mm tools, ~210–400W battery draw</div>
         </div>
       </div>
 
       <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px">Where Does the Power Go?</h3>
-      <p class="sdesc">Almost all battery drain is the motor itself, not the cutting. A 1 mm endmill at 30,000 RPM needs about 3W to cut aluminium. But the Speeder motor draws ~90W total to deliver that 3W. Here is why:</p>
+      <p class="sdesc">Almost all battery drain is the motor itself, not the cutting. The chain is: <b>Battery → Motor (85% efficient) → Shaft → Bearings + Windage + Cutting</b></p>
 
-      <div class="sg" style="grid-template-columns:repeat(2, 1fr)">
+      <div class="sg" style="grid-template-columns:repeat(3, 1fr)">
         <div class="sc">
           <div class="sv" style="font-size:18px;color:var(--green)">3–50 W</div>
           <div class="sl">Cutting Power</div>
-          <div class="ss">Energy to remove chips. Tiny for small tools in aluminium. Scales with tool size, RPM, and feed rate. See the 6061 table below.</div>
+          <div class="ss">Mechanical energy to remove chips. Tiny for small tools. Torque at the cutter: 1–16 mNm.</div>
         </div>
         <div class="sc">
           <div class="sv" style="font-size:18px;color:var(--amber)">60–200 W</div>
-          <div class="sl">Motor Overhead</div>
-          <div class="ss">The rest. Bearing friction, rotor windage (air drag at 30k+ RPM), motor controller electronics, and motor inefficiency (electrical in > mechanical out). This is the real battery killer.</div>
+          <div class="sl">Shaft Overhead</div>
+          <div class="ss">Bearing friction + rotor windage (air drag at 30k+ RPM). The motor has to spin whether it is cutting or not.</div>
+        </div>
+        <div class="sc">
+          <div class="sv" style="font-size:18px;color:var(--c2)">×1.18</div>
+          <div class="sl">Motor Inefficiency</div>
+          <div class="ss">BLDC motor ~85% efficient. Battery must supply shaft power ÷ 0.85. A 90W shaft load draws ~106W from the battery.</div>
         </div>
       </div>
 
       <div class="co">
-        <b>Example:</b> 1 mm tool at 30,000 RPM — cutting power is ~3W, motor overhead is ~87W, total draw ~90W. That means <b>97% of battery drain is just keeping the motor spinning</b>, only 3% goes to actually removing material. Even with a 2.5 mm tool at 30k the split is roughly 30% cutting / 70% overhead. The motor has to spin at 30,000+ RPM whether it is cutting or not.
+        <b>Example:</b> 1 mm tool at 30,000 RPM — cutting torque is 1.0 mNm (3W), shaft overhead is 87W (28 mNm), total shaft power 90W. Battery draw = 90W ÷ 0.85 = <b>106W from the battery</b>. Of that 106W, <b>only 3W (2.8%) goes to cutting</b>. The rest is bearings, windage, and motor losses.
       </div>
 
       <h3 style="font-family:var(--mono);font-size:16px;margin-top:28px;margin-bottom:12px">How We Got These Numbers</h3>
@@ -607,9 +612,10 @@
             <tr>
               <th>Tool</th>
               <th>RPM</th>
-              <th>Cutting Power</th>
-              <th>Motor Overhead</th>
-              <th>Total Draw</th>
+              <th>Cut Torque</th>
+              <th>Total Torque</th>
+              <th>Shaft Power</th>
+              <th>Battery Draw</th>
               <th>Battery Life</th>
             </tr>
           </thead>
@@ -617,33 +623,37 @@
             <tr>
               <td class="hi">1.0 mm</td>
               <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="1.0"></td>
-              <td class="est-cut">-</td>
-              <td class="est-oh">-</td>
-              <td class="est-total">-</td>
+              <td class="est-ct">-</td>
+              <td class="est-tt">-</td>
+              <td class="est-shaft">-</td>
+              <td class="est-batt">-</td>
               <td class="est-life">-</td>
             </tr>
             <tr>
               <td class="hi">1.5 mm</td>
               <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="1.5"></td>
-              <td class="est-cut">-</td>
-              <td class="est-oh">-</td>
-              <td class="est-total">-</td>
+              <td class="est-ct">-</td>
+              <td class="est-tt">-</td>
+              <td class="est-shaft">-</td>
+              <td class="est-batt">-</td>
               <td class="est-life">-</td>
             </tr>
             <tr>
               <td class="hi">2.0 mm</td>
               <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="2.0"></td>
-              <td class="est-cut">-</td>
-              <td class="est-oh">-</td>
-              <td class="est-total">-</td>
+              <td class="est-ct">-</td>
+              <td class="est-tt">-</td>
+              <td class="est-shaft">-</td>
+              <td class="est-batt">-</td>
               <td class="est-life">-</td>
             </tr>
             <tr>
               <td class="hi">2.5 mm</td>
               <td><input class="est-rpm" type="number" min="7000" max="60000" step="1000" value="30000" data-dia="2.5"></td>
-              <td class="est-cut">-</td>
-              <td class="est-oh">-</td>
-              <td class="est-total">-</td>
+              <td class="est-ct">-</td>
+              <td class="est-tt">-</td>
+              <td class="est-shaft">-</td>
+              <td class="est-batt">-</td>
               <td class="est-life">-</td>
             </tr>
           </tbody>
@@ -651,7 +661,7 @@
       </div>
 
       <div class="co">
-        <b>Assumptions:</b> Battery ~500 Wh × 85% usable = 425 Wh. Cutting power scales linearly with RPM from 12k baseline (6061-T6, full slotting, mid-range feed). Motor overhead modelled as 40W base + 1.5W per 1000 RPM + 50% of cutting power.
+        <b>Model:</b> P = τ × ω, where ω = RPM × 2π/60. Cutting power scales linearly with RPM from 12k baseline (6061-T6, full slotting). Shaft overhead = 40W base + 1.5W/1000 RPM + 50% of cutting power. Battery draw = shaft power ÷ 0.85 (BLDC motor efficiency). Battery 500 Wh × 85% usable = 425 Wh.
       </div>
     </div>
   </section>
@@ -917,9 +927,9 @@
   <script>
     (function () {
       // Cutting power at 12k RPM baseline (mid-range watts for full slotting in 6061-T6)
-      // From the cutting power table: using midpoint of each range
       var base12k = { 1.0: 1.25, 1.5: 4.15, 2.0: 10.05, 2.5: 20.15 };
       var batteryWh = 500 * 0.85; // 425 Wh usable
+      var motorEff = 0.85; // BLDC motor efficiency
 
       function estCalc() {
         var inputs = document.querySelectorAll('.est-rpm');
@@ -927,17 +937,26 @@
           var row = inp.closest('tr');
           var dia = parseFloat(inp.getAttribute('data-dia'));
           var rpm = parseFloat(inp.value) || 30000;
+          var omega = rpm * 2 * Math.PI / 60; // rad/s
 
           // Cutting power scales linearly with RPM from 12k baseline
           var cutW = base12k[dia] * (rpm / 12000);
-          // Motor overhead: 40W base + 1.5W per 1000 RPM + 50% of cutting power
+          // Shaft overhead: bearing friction + windage (mechanical)
           var ohW = 40 + (rpm / 1000) * 1.5 + cutW * 0.5;
-          var totalW = cutW + ohW;
-          var lifeHrs = totalW > 0 ? batteryWh / totalW : 0;
+          var shaftW = cutW + ohW;
+          // Battery draw = shaft power / motor efficiency
+          var battW = shaftW / motorEff;
 
-          row.querySelector('.est-cut').textContent = cutW.toFixed(0) + ' W';
-          row.querySelector('.est-oh').textContent = ohW.toFixed(0) + ' W';
-          row.querySelector('.est-total').textContent = totalW.toFixed(0) + ' W';
+          // Torque: τ = P / ω (in mNm)
+          var cutTorque = omega > 0 ? (cutW / omega) * 1000 : 0;
+          var totalTorque = omega > 0 ? (shaftW / omega) * 1000 : 0;
+
+          var lifeHrs = battW > 0 ? batteryWh / battW : 0;
+
+          row.querySelector('.est-ct').textContent = cutTorque.toFixed(1) + ' mNm';
+          row.querySelector('.est-tt').textContent = totalTorque.toFixed(1) + ' mNm';
+          row.querySelector('.est-shaft').textContent = shaftW.toFixed(0) + ' W';
+          row.querySelector('.est-batt').textContent = battW.toFixed(0) + ' W';
 
           var lifeCell = row.querySelector('.est-life');
           if (lifeHrs >= 1) {
